@@ -1,0 +1,49 @@
+lines=`wc RawOutput/AllExpDifference_skipped.txt  | awk '{print $1}'`
+cat RawOutput/AllExpDifference_skipped.txt | sort -n | uniq -c | awk -v var=$lines '{sum+=$1; print $2, sum/var}' > PlotableData/AllExpDifference_CDF_skipped.txt
+cat RawOutput/Biggest_component_MacroLength_skipped.txt | sort -n | gawk 'BEGIN{bef=30; x=1;}{if(x>=20 && bef!=$1) {asort(a); if(bef < 1000) { print bef, a[int((x+1)/2)]; bef=$1; x=0; delete a;}} a[x]=$2; x=x+1;}' >PlotableData/BiggestComponent_MacroLength_Bucket20_skipped.txt 
+lines=`wc RawOutput/Feynman_summary_skipped.txt  | awk '{print $1}'`
+cat RawOutput/Feynman_summary_skipped.txt  | awk '{ print $1/$2 }' | sort | awk -v var=$lines '{if(bef!=$1){ print bef, sum/var; bef=$1} sum++;}END{print 1,1}' > PlotableData/BiggestComponentFraction_CDF_skipped.txt
+cat RawOutput/Biggest_SecondBiggest_skipped.txt | awk '{print $2/$1}' | sort -n | awk -v var=$lines 'BEGIN{bef=0; sum=0}{if($1 != bef) {print bef,sum/var; bef=$1;} sum++;}END{print bef, sum/var} ' > PlotableData/Ratio_Biggest_SecondBiggest_skipped.txt
+cp RawOutput/Biggest_SecondBiggest_skipped.txt PlotableData/
+
+
+
+
+lines=`wc RawOutput/AllExpDifference.txt  | awk '{print $1}'`
+cat RawOutput/AllExpDifference.txt | sort -n | uniq -c | awk -v var=$lines '{sum+=$1; print $2, sum/var}' > PlotableData/AllExpDifference_CDF.txt
+cat RawOutput/Biggest_component_MacroLength.txt | sort -n | gawk 'BEGIN{bef=30; x=1;}{if(x>=20 && bef!=$1) {asort(a); if(bef < 1000) { print bef, a[int((x+1)/2)]; bef=$1; x=0; delete a;}} a[x]=$2; x=x+1;}' >PlotableData/BiggestComponent_MacroLength_Bucket20.txt 
+lines=`wc RawOutput/Feynman_summary.txt  | awk '{print $1}'`
+cat RawOutput/Feynman_summary.txt  | awk '{ print $1/$2 }' | sort | awk -v var=$lines '{if(bef!=$1){ print bef, sum/var; bef=$1} sum++;}END{print 1,1}' > PlotableData/BiggestComponentFraction_CDF.txt
+cat RawOutput/Biggest_SecondBiggest.txt | awk '{print $2/$1}' | sort -n | awk -v var=$lines 'BEGIN{bef=0; sum=0}{if($1 != bef) {print bef,sum/var; bef=$1;} sum++;}END{print bef, sum/var} ' > PlotableData/Ratio_Biggest_SecondBiggest.txt
+cat RawOutput/Stats.txt | awk '{if(NR>1) a[$10]+=($9/500)*12 + int((($9%500)/40)); b[$10]++;}END{for(i in a) print i, a[i]/b[i]}' >PlotableData/MaxPath_MaxTime.txt 
+cp RawOutput/Biggest_SecondBiggest.txt PlotableData/
+
+
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1 && $2 > 100) a[$4]+=$5; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger100.txt
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1 && $2 > 100) a[$4]+=$6; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_NewExperience-FinalLocalLarger100.txt
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$4]+=$5; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_ChangeFraction.txt
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$4]+=$6; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_NewExperience.txt
+
+
+cat RawOutput/heaps_law.txt | awk '{if(NR> 1) {a[$1]+=$3; b[$1]++;}}END{for(i in a) { print i, a[i]/b[i]}}' | sort -n > PlotableData/FinalLocalExperience_AverageTokens.txt
+
+cat RawOutput/heaps_law.txt | awk '{if(NR> 1) {a[$1]+=$2; b[$1]++;}}END{for(i in a) { print i, a[i]/b[i],b[i]}}' | sort -n > PlotableData/FinalLocalExperience_AverageTypes_MacroPeopleCount.txt
+
+# Colorful plot with local thresholds
+cat RawOutput/Experience_changed_name.txt  | awk 'BEGIN{printf "LocalExperience "; for(j = 0; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=0; j <=130; j+=10) { if(NR>1 && $2 >= j){a[$4][j]+=$5;} b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=0; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j]} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction-All.txt
+
+# Colorful plot with Global thresholds
+cat RawOutput/Experience_changed_name.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All.txt
+
+
+# Colorful plot with Global thresholds - Early life threshold
+cat RawOutput/Experience_changed_name.txt | awk -v EarlyLifeThreshold=40 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j && $3 < EarlyLifeThreshold) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-EarlyLife.txt
+
+
+cat RawOutput/heaps_law.txt | awk '{if(NR == 1) { print "FinalLocalExp UnchangedPeople UnchangedFraction" } else { if($2 == 1) { a[$1]++ } b[$1]++ }} END {for(i in a) { print i, a[i], a[i]/b[i] }}' | sort -n > PlotableData/FinalLocalExperience_UnchangedNames.txt
+
+
+#unique author pair and unique paper instance
+cat RawOutput/2_to_1_samples.txt | awk '{ if(a[$5] == 0) { a[$5] = 1; print $1, $2, $3, $4;} }' > RawOutput/2_to_1_samples-uniquePaper.txt
+cat RawOutput/2_to_1_samples.txt | awk '{if($6 > $8){temp=$6;$6=$8;$8=temp;} if(a[$6][$8] == 0) { a[$6][$8] = 1; print $1, $2, $3, $4;} }' > RawOutput/2_to_1_samples-uniqueAuthorPair.txt
+

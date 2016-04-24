@@ -1,0 +1,206 @@
+set xlabel "Experience Difference"
+set ylabel "Probability Mass"
+set term png
+set output "../Plots/Experience_Difference.png"
+plot [-200:200][0:1] "AllExpDifference_CDF.txt" lc rgb "blue" title "Teacher - Learner Experience"
+
+
+set xlabel "Macro body length in number of characters"
+set ylabel "Median of the fraction of the biggest component"
+set xrange [0:200]
+set term png
+set output "../Plots/BiggestComponent_MacroLength_Bucket20.png"
+plot "BiggestComponent_MacroLength_Bucket20.txt" lc rgb "blue" title ""
+
+
+set xlabel "Fraction of biggest cascade"
+set ylabel "Probability mass"
+set title "Fraction of users involved in the biggest cascade"
+set term png
+set output "../Plots/Feynman.png"
+plot [0:1][0:1] "BiggestComponentFraction_CDF.txt" title ""
+
+
+set xlabel "Ratio of the second biggest component to the biggest component"
+set ylabel "Probability mass"
+set term png
+set title ""
+set output "../Plots/Ratio_BiggestComponent_SecondBiggest_CDF.png"
+plot [0:1][0:1] "Ratio_Biggest_SecondBiggest.txt" title ""
+
+
+set xlabel "Biggest component node fraction"
+set ylabel "Second Biggest component node fraction"
+set term png
+set title ""
+set output "../Plots/BiggestComponent_SecondBiggest.png"
+plot [0:1][0:1] "Biggest_SecondBiggest.txt" title ""
+
+
+set xlabel 'Max path length'
+set ylabel 'Time (in months)'
+set term png
+set output '../Plots/MaxPath_MaxTime.png'
+plot "MaxPath_MaxTime.txt" title "" with lines 
+
+
+
+
+
+
+
+set xlabel "Experience Difference"
+set ylabel "Probability Mass"
+set term png
+set output "../Plots/Experience_Difference_skipped.png"
+plot [-200:200][0:1] "AllExpDifference_CDF_skipped.txt" lc rgb "blue" title "Teacher - Learner Experience"
+
+
+set xlabel "Macro body length in number of characters"
+set ylabel "Median of the fraction of the biggest component"
+set xrange [0:200]
+set term png
+set output "../Plots/BiggestComponent_MacroLength_Bucket20_skipped.png"
+plot "BiggestComponent_MacroLength_Bucket20_skipped.txt" lc rgb "blue" title ""
+
+
+set xlabel "Fraction of biggest cascade"
+set ylabel "Probability mass"
+set title "Fraction of users involved in the biggest cascade"
+set term png
+set output "../Plots/Feynman_skipped.png"
+plot [0:1][0:1] "BiggestComponentFraction_CDF_skipped.txt" title ""
+
+
+set xlabel "Ratio of the second biggest component to the biggest component"
+set ylabel "Probability mass"
+set term png
+set title ""
+set output "../Plots/Ratio_BiggestComponent_SecondBiggest_CDF_skipped.png"
+plot [0:1][0:1] "Ratio_Biggest_SecondBiggest_skipped.txt" title ""
+
+
+set xlabel "Biggest component node fraction"
+set ylabel "Second Biggest component node fraction"
+set term png
+set title ""
+set output "../Plots/BiggestComponent_SecondBiggest_skipped.png"
+plot [0:1][0:1] "Biggest_SecondBiggest_skipped.txt" title ""
+
+
+set xlabel "Number of Authors Used"
+set ylabel "Fraction of Biggest Component Size"
+set term png
+set output "Plots/BiggestFraction_AllAuthors.png"
+set yrange [0:1]
+set xrange [0:1000]
+plot "PlotableData/BiggestFraction_AuthorsAll.txt" title ""
+
+
+_______________________________________________-
+
+#Name Changing plots
+set xlabel "Global Experience"
+set ylabel "Fraction New Experience"
+set term png
+set output "Plots/GlobalExperience_NewExperience.png"
+plot[0:200][0:1] "PlotableData/GlobalExperience_NewExperience.txt" title ""
+
+
+
+set xlabel "Global Experience"
+set ylabel "Fraction Change"
+set term png
+set output "Plots/GlobalExperience_Change.png"
+plot[0:200][0:1] "PlotableData/GlobalExperience_ChangeFraction.txt" title ""
+
+
+set xlabel "Local Experience"
+set ylabel "Fraction New Experience"
+set term png
+set output "Plots/LocalExperience_NewExperience.png"
+plot[0:200][0:0.22] "PlotableData/LocalExperience_NewExperience.txt" title ""
+
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set output "Plots/LocalExperience_Change.png"
+plot[0:200][0:0.22] "PlotableData/LocalExperience_ChangeFraction.txt" title ""
+
+set xlabel "Local Experience"
+set ylabel "Fraction New Experience"
+set term png
+set output "Plots/LocalExperience_NewExperience-FinalLocalExpLargerThan100.png"
+plot[0:200][0:1] "PlotableData/LocalExperience_NewExperience-FinalLocalLarger50.txt" title "50" "PlotableData/LocalExperience_NewExperience-FinalLocalLarger100.txt" title "100"
+
+
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set output "Plots/LocalExperience_Change-FinalLocalExpLargerThan100.png"
+plot[0:200][0:1] "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger0.txt" title "0" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger10.txt" title "10" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger20.txt" title "20" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger30.txt" title "30"
+
+
+COLOR PLOTS LOCAL FILTER
+
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Local"
+set output "Plots/LocalExperience_Change-All-wide.png"
+set key outside
+set yrange [0:0.2]
+plot for [col=2:14] "PlotableData/LocalExperience_ChangeFraction-All-wide.txt"  using 1:col with lines title columnheader
+
+COLOR PLOTS GLOBAL FILTER
+
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-wide.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.12]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-wide.txt"  using 1:col with lines title columnheader
+
+COLOR PLOTS GLOBAL FILTER EARLY LIFE
+
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-EarlyLife.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.02]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-EarlyLife.txt"  using 1:col with lines title columnheader
+
+
+
+
+set xlabel "Final Local Experience"
+set ylabel "Average Tokens"
+set xrange [0:200]
+set term png
+set output "Plots/FinalLocalExperience_AverageTokens.png"
+plot "PlotableData/FinalLocalExperience_AverageTokens.txt" title ""
+
+set xlabel "Final Local Experience"
+set ylabel "Average Changes"
+set xrange [0:200]
+set yrange [0:80]
+set term png
+set output "Plots/FinalLocalExperience_heaps.png"
+plot "PlotableData/FinalLocalExperience_AverageTypes_MacroPeopleCount.txt" using 1:2 title ""
+
+set xlabel "Final Local Experience"
+set ylabel "Unchanged Fraction"
+set xrange [1:50]
+set term png
+set title "Local"
+set output "Plots/FinalLocalExperience_UnchangedNames.png"
+set key outside
+plot "PlotableData/FinalLocalExperience_UnchangedNames.txt"  using 1:3 with lines title ""
+
+
