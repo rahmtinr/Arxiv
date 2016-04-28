@@ -47,3 +47,6 @@ cat RawOutput/heaps_law.txt | awk '{if(NR == 1) { print "FinalLocalExp Unchanged
 cat RawOutput/2_to_1_samples.txt | awk '{ if(a[$5] == 0) { a[$5] = 1; print $1, $2, $3, $4;} }' > RawOutput/2_to_1_samples-uniquePaper.txt
 cat RawOutput/2_to_1_samples.txt | awk '{if($6 > $8){temp=$6;$6=$8;$8=temp;} if(a[$6][$8] == 0) { a[$6][$8] = 1; print $1, $2, $3, $4;} }' > RawOutput/2_to_1_samples-uniqueAuthorPair.txt
 
+## check how many nosmart instances exist that on the same paper different people won the fight
+cat RawOutput/2_to_1_samples_nosmart.txt | awk '{if($2==$3){label=1;a[$5]++}else{label=2;a[$5]+=10000;}}END{for(i in a) print i, a[i]}' | awk '{if($2 > 10000 && $2 % 10000 > 0) {print; sum += int($2/10000) + ($2 % 10000)}}END{print sum}' | less
+

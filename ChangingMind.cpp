@@ -41,9 +41,9 @@ const int N_TO_1 = 2;
 #define K_2K_DEF false
 #define SOLVE_DEF true
 #define HEAPS_LAW_DEF false
-#define LONGEVITY_DEF true
+#define LONGEVITY_DEF false
 const string TYPE = "";
-const string SMART = "_smart"; // options are _nosmart or _smart
+const string SMART = "_nosmart"; // options are _nosmart or _smart
 
 
 string SimpleIntToString(int x) {
@@ -164,7 +164,7 @@ int data_points = 0;
 int macro_counter = 1;
 
 bool GoodMacro(Macro macro) { 
-    if(word_bucket[macro.macro_number].size() < Macro_paper_usage || rev_macro_to_num[macro.macro_number].length() < Macro_length_filter) { // macro needs to be used and should have a length
+    if(macro_paper_count[macro.macro_number] < Macro_paper_usage || rev_macro_to_num[macro.macro_number].length() < Macro_length_filter) { // macro needs to be used and should have a length
         return false;
     }
     return true;
@@ -362,9 +362,12 @@ bool solve(int x) {
         }
         fout_heaps_law << person_path[i].size() << " " << names_set.size() << " " << counter << endl; // each (person, macro) pair gets one line! 
     }
-    
+    cerr << "starting: " << x << endl; 
 //  Most authoratitive author prediction
     for(int i = 0; i < (int)word_bucket[x].size(); i++) {
+        if(x == 29297) {
+            cerr <<  "### " << i << " " << word_bucket[x].size() << endl;
+        }
         int winner = -1;
         Macro macro = word_bucket[x][i];
         int bound = min(N_TO_1, (int)macro.authors.size());
@@ -376,6 +379,9 @@ bool solve(int x) {
         macros_used.clear();
         macros_used.push_back(macro);
         for(int j = 0; j < bound && check == true; j++) {
+            if(x == 29297) {
+                cerr <<  "$$$$ " << j << endl;
+            }
             int author_j = local_author_id[macro.authors[j]];
             if(person_pointer[author_j] <= person_pointer[local_author_id[macro.authors[min_index]]]) {
                 min_index = j;
@@ -410,9 +416,14 @@ bool solve(int x) {
                 winner = j + 1;
             }
         }
-        
+        cerr << " salam" << endl;
         bool same_date = false;
-        if(check == true && count_equal_names == 1 && bound == N_TO_1 && (null_names == 0 || (null_names == 1 && SMART == "_smart" && macro.authors.size() == N_TO_1))) {
+        if(check == true && count_equal_names == 1 && macro.authors.size() == N_TO_1 && (null_names == 0 || (null_names == 1 && SMART == "_smart" && macro.authors.size() == N_TO_1))) {
+            preprocess(x, word_bucket[x][i]);
+            if(null_names == 1) {
+                cerr <<" SHOUT SHOUT! There is a problem" << endl;
+            }
+            cerr << "starting the instace" << endl;
             for(int j = 2; j <= bound; j++) {
                 if(macros_used[j] == macros_used[most_recent_index]) { // only checks the date
                     continue;
@@ -428,6 +439,7 @@ bool solve(int x) {
                     break;
                 }
             }
+            cerr << "Got here in the instance" << endl;
             if(same_date == false) {
                 fout_N_becomes_1 << RemoveSpaces(rev_macro_to_num[macro.macro_number]) << ": ";
                 for(int k = 0; k < (int)macros_used.size(); k++) {
@@ -456,7 +468,8 @@ bool solve(int x) {
                     double denom = (double)(max(1, person_pointer[local_author] - 1));
                     fout_learning << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
                     fout_learning << is_max << ", " << is_min << ", " << is_most_recent << ", ";
-
+                    cerr << "printing" << endl;
+                    cerr << macro.co_authors_count_used_previously.size() << " " << macros_used.size() << endl;
                     if(N_TO_1 == 2 && unique_authorPair.find(make_pair(macro.authors[0], macro.authors[1])) == unique_authorPair.end()) {
                         fout_learning_unique_authorPair << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
                         fout_learning_unique_authorPair << is_max << ", " << is_min << ", " << is_most_recent << ", " << macros_used[k + 1].name.length() << ", ";
@@ -467,10 +480,11 @@ bool solve(int x) {
                         fout_learning_unique_paper << is_max << ", " << is_min << ", " << is_most_recent << ", " << macros_used[k + 1].name.length() << ", ";
                         fout_learning_unique_paper << macro.co_authors_count_used_previously[k] << ", ";
                     }
+                    cerr << "finished printing" << endl;
                 }
                 fout_learning << winner << endl; 
                 if(N_TO_1 == 2 && unique_authorPair.find(make_pair(macro.authors[0], macro.authors[1])) == unique_authorPair.end()) {
-                    fout_learning_unique_authorPair << winner << ", " << x << endl;  
+                    fout_learning_unique_authorPair << winner << endl;  
                 }
 
                 if(N_TO_1 == 2 && unique_paper.find(macro.paper_id) == unique_paper.end()) {
@@ -496,6 +510,7 @@ bool solve(int x) {
             }
         }
     }
+    cerr << "Finishing: " << x << endl;
     return true;
 }
 #endif
@@ -566,10 +581,11 @@ void AuthorFitness() {
     map<pair<int, int>, string> author_macro_name; // value = the last name that author(key.first) used for macro(key.second)
     map<int, int> author_change_macro_name; // value = how many time author used a macro 
     map<pair<int, int>, int> author_macro_pair_change_count; // value = how many times the author(key.first) changed the name for macro(key.second)
-
-
-    
+ 
     for(int i = 0; i < (int) macros.size(); i++) {
+        if(i % 100000 == 0 ) {
+            cerr <<"Longevity " <<  i / 100000 << endl;
+        }
         if(!(word_bucket[macros[i].macro_number].size() < Macro_paper_usage || rev_macro_to_num[macros[i].macro_number].length() < Macro_length_filter)) { // macro needs to be used and should have a length
             for(int j = 0; j < (int)macros[i].authors.size(); j++) {
                 int author1 = macros[i].authors[j];
@@ -598,7 +614,7 @@ void AuthorFitness() {
                 }
             }
         }
-        if(i == (int)macros.size() - 1 || ExactSame(macros[i], macros[i + 1]) == false) {
+        if((i == (int)macros.size() - 1 || ExactSame(macros[i], macros[i + 1]) == false) && macros[i].authors.size() < 20) {
             for(int j = 0; j < (int) macros[i].authors.size(); j++) {
                 int author1 = macros[i].authors[j];
                 if(author_threshold.find(author1) == author_threshold.end()) {
@@ -625,23 +641,6 @@ void AuthorFitness() {
 
                     author_threshold[author1] = author_threshold[author1] + window;
                 }
-
-
-
-                // easy challenge! 
-                if(macros[i].experience[j] == 35 && (author_experience[author1] <= 40 || author_experience[author1] >= 50)) {
-                    double changed = author_change_macro_name[author1]
-                        / (double)(all_macro_usage[author1] - unique_macro_usage[author1]);
-                    fout_35_dies_before_40_or_after_50 << author_threshold[author1] << ", " << all_macro_usage[author1] << ", ";
-                    fout_35_dies_before_40_or_after_50 << unique_macro_usage[author1] << ", ";
-                    fout_35_dies_before_40_or_after_50 << co_author_count[author1] << ", ";
-                    fout_35_dies_before_40_or_after_50 << changed << ", ";
-                    int label = 1;
-                    if(author_experience[author1] < 40) {
-                        label = 0;
-                    }
-                    fout_35_dies_before_40_or_after_50 << label << endl;
-                }
             }
         }
     }
@@ -661,7 +660,7 @@ void preprocess() {
         }
         Macro macro = macros[i];
         int macro_id = macro.macro_number;
-        if(!(rev_macro_to_num[macro.macro_number].length() < Macro_length_filter) && macro.authors.size() < 30 && macro_paper_count[macro.macro_number] >= Macro_paper_usage) { // macro needs to be used and should have a length
+        if(GoodMacro(macro)) { // macro needs to be used and should have a length
             for(int j = 0; j < (int)macro.authors.size(); j++) {
                 int author1 = macro.authors[j];
                 for(int k = 0; k < (int) macro.authors.size(); k++) {
@@ -709,6 +708,12 @@ void preprocess() {
             }
         }
     }
+    cerr << "for loop finished gonna start clearing" << endl;
+    cerr << author_macro_co_author.size() << endl; author_macro_co_author.clear(); cerr << " 1" << endl;
+    cerr << co_authors_macro.size() << endl; co_authors_macro.clear(); cerr << "2 " << endl;
+    cerr << author_macro.size() << endl; author_macro.clear(); cerr << "3" << endl;
+    cerr << author_macros.size() << endl; author_macros.clear(); cerr <<"4" << endl;
+    cerr << "Finishing preprocessing" << endl;
 }
 
 int main() {
@@ -900,9 +905,14 @@ int main() {
     fout_learning << "Label" << endl;
     fout_learning_unique_paper << "Label" << endl;
     fout_learning_unique_authorPair << "Label" << endl;
+    cerr << "count of unique macros: " << macro_counter << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
-        solve(i); 
+       if( i % 10000 == 0 ) {
+           cerr << i << endl;
+       }
+       solve(i); 
     }
+    cerr << "ending solve" << endl;
 #endif
 
 #if HEAPS_LAW_DEF
