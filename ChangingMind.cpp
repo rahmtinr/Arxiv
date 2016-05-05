@@ -127,7 +127,7 @@ bool solve(int x) {
                 fout_N_becomes_1 << macro.paper_id << " ";
                 for(int k = 1; k < (int)macros_used.size(); k++) {
                     string author_k = rev_author_to_num[macros_used[0].authors[indecies_that_have_past[k-1]]];
-                    fout_N_becomes_1 << RemoveSpaces(author_k) << " " << macros_used[k].paper_id << " " ;
+                    fout_N_becomes_1 << RemoveSpaces(author_k) << " " << macros_used[k].paper_id << " " << macros_used[0].experience[indecies_that_have_past[k - 1]] << " " ;
                 }
                 fout_N_becomes_1 << endl;
                 cerr << " going into printing" << endl;
@@ -153,6 +153,7 @@ bool solve(int x) {
                     fout_learning << is_max << ", " << is_min << ", " << is_most_recent << ", ";
 */
                     pair<int, int> my_pair = make_pair(macro.authors[indecies_that_have_past[0]], macro.authors[indecies_that_have_past[1]]);
+                    /* TODO
                     if(N_TO_1 == 2 && unique_authorPair.find(my_pair) == unique_authorPair.end()) {
                         cerr << " HERE IS THE K I want to print" << k << " ::::: " << macro.experience[k] << endl;
                         fout_learning_unique_authorPair << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
@@ -161,6 +162,7 @@ bool solve(int x) {
                         fout_learning_unique_authorPair << local_graph_features.degree[loop_counter] << ", " << local_graph_features.cent[loop_counter] << ", ";
                         fout_learning_unique_authorPair << global_graph_features.degree[loop_counter] << ", " << global_graph_features.cent[loop_counter] << ", ";
                     }
+                    */
 /*                    
                     if(N_TO_1 == 2 && unique_paper.find(macro.paper_id) == unique_paper.end()) {
                         fout_learning_unique_paper << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
@@ -170,17 +172,20 @@ bool solve(int x) {
 */
                 }
 //                fout_learning << winner << endl; 
+/* TODO
                 pair<int, int> my_pair = make_pair(macro.authors[indecies_that_have_past[0]], macro.authors[indecies_that_have_past[1]]);
                 if(N_TO_1 == 2 && unique_authorPair.find(my_pair) == unique_authorPair.end()) {
                     fout_learning_unique_authorPair << rev_macro_to_num[macro.macro_number].length() << ", " << winner << endl;  
                 }
+                unique_authorPair.insert(my_pair);
+*/
+
 /*
                 if(N_TO_1 == 2 && unique_paper.find(macro.paper_id) == unique_paper.end()) {
                     fout_learning_unique_paper << winner << endl; 
                 }
-*/
-                unique_authorPair.insert(my_pair);
                 unique_paper.insert(macro.paper_id);
+*/
                 data_points++;
             }
         }
@@ -235,8 +240,8 @@ int main() {
         }
     }
     cerr << " $$$$$ " << endl;
-#if SOLVE_DEF
-// #if false
+// #if SOLVE_DEF
+#if false
     preprocess();
 #endif
     for(int i = 0; i < (int)macros.size(); i++) {
@@ -259,7 +264,9 @@ int main() {
 
 //    fout_learning.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + SMART + ".txt");
 //    fout_learning_unique_paper.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_paper" + SMART + ".txt");
-    fout_learning_unique_authorPair.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
+
+//  TODO  fout_learning_unique_authorPair.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
+
     fout_N_becomes_1.open("RawOutput/" + to_string(N_TO_1) + "_to_1_samples" + TYPE + SMART + ".txt");
     fout_N_becomes_1 << "MacroBody FinalName ";
     for(int i = 1; i <= N_TO_1; i++) {
@@ -267,23 +274,24 @@ int main() {
     }
     fout_N_becomes_1 << "FinalPaperId ";
     for(int i = 1; i <= N_TO_1; i++) {
-        fout_N_becomes_1 << "Author" + to_string(i) + "Name PrevPaperAuthor" + to_string(i) + " ";
+        fout_N_becomes_1 << "Author" + to_string(i) + "Name" + to_string(i) + " PrevPaperAuthor" + to_string(i) + " GlobalExperience" + to_string(i);
     }
     fout_N_becomes_1 << endl;
     fout_experience_changed_name << "FinalGlobalExperience FinalLocalExperience GlobalCurrentExperience LocalCurrentExperience HasChanged CompletelyNew" << endl;
-    fout_experience_changed_name << "FinalGlobalExperience FinalLocalExperience GlobalCurrentExperience LocalCurrentExperience HasChanged CompletelyNew" << endl;
-    fout_heaps_law << "FinalLocalExperience Types Token" << endl;
     for(int i = 1; i <= N_TO_1; i++) {
         string temp = to_string(i);
 //        fout_learning << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp +", IsMin" + temp + ", " + "IsMostRecent" + temp + ", "; 
 //        fout_learning_unique_paper << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp +", IsMin" + temp + ", " + "IsMostRecent" + temp + ", "; 
+ 
+/* TODO        
         fout_learning_unique_authorPair << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp + ", IsMin" + temp + ", " + "IsMostRecent" + temp + ", ";
         fout_learning_unique_authorPair << "MacroNameLength" + temp + ", " + "CoAuthorCountUsedMacro" + temp + ", LocalDegree" + temp + ", BetweenCentLocal" + temp + ", "  ; 
         fout_learning_unique_authorPair << "GlobalDegree" + temp + ", BetweenCentGlobal" + temp + ", "  ; 
+*/
     }
 //    fout_learning << "Label" << endl;
 //    fout_learning_unique_paper << "Label" << endl;
-    fout_learning_unique_authorPair << "MacroBodyLength, Label" << endl;
+// TODO    fout_learning_unique_authorPair << "MacroBodyLength, Label" << endl;
     cerr << "count of unique macros: " << macro_counter << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
        if( i % 10000 == 0 ) {
@@ -296,12 +304,13 @@ int main() {
 
 #if MACRO_HEAPS_LAW_DEF
     // HEAPS LAW EACH MACRO BEING A BOOK AND NAMES BEING WORDS
-     fout_heaps_law.open("RawOutput/heaps_law" + TYPE + ".txt");
-`     for(int i = 1; i < (int)macro_counter; i++) {
-       if( i % 10000 == 0 ) {
-           cerr << i << endl;
-       }
-       HeapsLawForAMacro(i); 
+    fout_heaps_law.open("RawOutput/heaps_law" + TYPE + ".txt");
+    fout_heaps_law << "FinalLocalExperience Types Token" << endl;
+    for(int i = 1; i < (int)macro_counter; i++) {
+        if( i % 10000 == 0 ) {
+            cerr << i << endl;
+        }
+        HeapsLawForAMacro(i); 
     }
 #endif
 
