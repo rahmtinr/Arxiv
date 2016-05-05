@@ -7,10 +7,10 @@
 #include"Macro.h"
 
 #define K_2K_DEF true
-#define SOLVE_DEF true
-#define AUTHOR_HEAPS_LAW_DEF true
-#define MACRO_HEAPS_LAW_DEF true
-#define LONGEVITY_DEF true
+#define SOLVE_DEF false
+#define AUTHOR_HEAPS_LAW_DEF false
+#define MACRO_HEAPS_LAW_DEF false
+#define LONGEVITY_DEF false
 
 extern ofstream fout_experience_changed_name;
 extern ofstream fout_heaps_law;
@@ -52,7 +52,7 @@ extern int macro_counter;
 std::string SimpleIntToString(int);
 std::string RemoveSpaces(std::string);
 void preprocess();
-void initialize(int, int);
+void initialize(int&, int);
 bool ExactSame(Macro, Macro);
 bool GoodMacro(Macro, int, int);
 

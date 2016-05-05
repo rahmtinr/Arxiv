@@ -19,7 +19,7 @@ ofstream fout_learning_unique_authorPair;
 ofstream fout_N_becomes_1;
 
 const std::string TYPE = "";
-const std::string SMART = "_smart"; // options are _nosmart or _smart
+const std::string SMART = "_nosmart"; // options are _nosmart or _smart
 const bool has_skipped = false;
 const int H = 1000 * 1000;
 const int N_TO_1 = 2;
@@ -165,10 +165,10 @@ void preprocess() {
     cerr << "Finishing preprocessing" << endl;
 }
 
-void initialize(int local_author_count, int x) {
+void initialize(int& local_author_count, int x) {
     local_author_id.clear();
     rev_local_auhtor_id.clear();
-    for(Macro macro : macros) {
+    for(Macro macro : word_bucket[x]) {
         for(int author: macro.authors) {
             if(local_author_id.find(author) == local_author_id.end()) {
                 local_author_id.insert(make_pair(author, local_author_count));
@@ -185,8 +185,8 @@ void initialize(int local_author_count, int x) {
         adj_list[i].clear();
     }
 
-    for(int i = 0; i < (int)macros.size(); i++) {
-        for(int author : macros[i].authors) {
+    for(int i = 0; i < (int)word_bucket[x].size(); i++) {
+        for(int author : word_bucket[x][i].authors) {
             person_path[local_author_id[author]].push_back(i);
         }
     }

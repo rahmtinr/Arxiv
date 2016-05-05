@@ -6,7 +6,10 @@ ofstream fout_k_2k[10];
 ofstream fout_k_2k_thresholds("RawOutput/k_2k_thresholds.txt");
 vector<OutputElement> k_2k[10];
 void prediction_k_2k(int x) {
-    if(!GoodMacro(word_bucket[x][0], macro_paper_count[x], rev_macro_to_num[x].length())) { // macro needs to be used and should have a length
+    if(word_bucket[x].size() == 0) {
+        return;
+    }
+    if(!GoodMacro(word_bucket[x][0], macro_paper_count[x] - 10, rev_macro_to_num[x].length() - 10)) { // macro needs to be used and should have a length
         return;
     }
 
@@ -39,9 +42,11 @@ void prediction_k_2k(int x) {
         }
         int index = author_count_to_index[threshold];
         vector<int> global, local;
+        set<string> unique_names;
         double global_sum = 0, local_sum = 0;
         local_unique_authors.clear();
         for(int i = 0; i < index; i++) {
+            unique_names.insert(word_bucket[x][i].name);
             for(int j = 0; j < (int)word_bucket[x][i].authors.size(); j++) {
                 int temp = word_bucket[x][i].authors[j];
                 if(local_unique_authors.find(temp) == local_unique_authors.end()) {
@@ -73,8 +78,15 @@ void prediction_k_2k(int x) {
         sort(local.begin(), local.end());
         OutputElement output_element;
         int eps = 1e-7;
+        int special_characters = 0;
+        for(int i = 0; i < (int)rev_author_to_num[x].length(); i++) {
+            if(rev_author_to_num[x][i] == '{' || rev_author_to_num[x][i] =='#') {
+                special_characters++;
+            }
+        }
         output_element.output_string = to_string(word_bucket[x][0].authors.size()) + ", " + to_string(index) + ", " + to_string(global[global.size() / 2]) + ", " + to_string(global_sum / global.size()) + ", ";
         output_element.output_string += to_string(local_global.first + eps) + ", " + to_string(local_global.second + eps) + ", ";
+        output_element.output_string += to_string(rev_author_to_num[x].length()) + ", " + to_string(special_characters) + ", " + to_string(unique_names.size()) + ", ";
         output_element.authors_count = local_author_count;
         k_2k[out_counter].push_back(output_element);
     }

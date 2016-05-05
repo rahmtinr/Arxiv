@@ -3,6 +3,18 @@
 #include"Core.h"
 #include<set>
 #include<algorithm>
-std::pair<double, double> PreProcessGraphFeatures(int, Macro, int);
+#include<cstring>
+#include<iostream>
+using namespace std;
+
+struct GraphFeatures {
+    int degree[2];
+    double cent[2];
+};
+
+extern vector<int> graph[50000 + 10];
+extern bool mark[50000 + 10];
+GraphFeatures PreProcessLocalGraphFeatures(int, Macro, int, int, int);
+GraphFeatures PreProcessGlobalGraphFeatures(int, Macro, int, int, int);
 pair<double, double> ClusteringCoeff(int);
 #endif
