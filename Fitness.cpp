@@ -79,14 +79,14 @@ void prediction_k_2k(int x) {
         OutputElement output_element;
         int eps = 1e-7;
         int special_characters = 0;
-        for(int i = 0; i < (int)rev_author_to_num[x].length(); i++) {
-            if(rev_author_to_num[x][i] == '{' || rev_author_to_num[x][i] =='#') {
+        for(int i = 0; i < (int)rev_macro_to_num[x].length(); i++) {
+            if(rev_macro_to_num[x][i] == '{' || rev_macro_to_num[x][i] =='#') {
                 special_characters++;
             }
         }
         output_element.output_string = to_string(word_bucket[x][0].authors.size()) + ", " + to_string(index) + ", " + to_string(global[global.size() / 2]) + ", " + to_string(global_sum / global.size()) + ", ";
         output_element.output_string += to_string(local_global.first + eps) + ", " + to_string(local_global.second + eps) + ", ";
-        output_element.output_string += to_string(rev_author_to_num[x].length()) + ", " + to_string(special_characters) + ", " + to_string(unique_names.size()) + ", ";
+        output_element.output_string += to_string(rev_macro_to_num[x].length()) + ", " + to_string(special_characters) + ", " + to_string(unique_names.size()) + ", ";
         output_element.authors_count = local_author_count;
         k_2k[out_counter].push_back(output_element);
     }

@@ -119,7 +119,6 @@ bool solve(int x) {
                 cerr << "YAY local done! " << endl;
                 GraphFeatures global_graph_features = PreProcessGlobalGraphFeatures(x, word_bucket[x][i], local_author_count, indecies_that_have_past[0], indecies_that_have_past[1]);
                 cerr << "YAY global done! " << endl;
-                cerr << " YES " << endl;
                 fout_N_becomes_1 << RemoveSpaces(rev_macro_to_num[macro.macro_number]) << ": ";
                 for(int k = 0; k < (int)macros_used.size(); k++) {
                     fout_N_becomes_1 << macros_used[k].name << " ";
@@ -153,7 +152,6 @@ bool solve(int x) {
                     fout_learning << is_max << ", " << is_min << ", " << is_most_recent << ", ";
 */
                     pair<int, int> my_pair = make_pair(macro.authors[indecies_that_have_past[0]], macro.authors[indecies_that_have_past[1]]);
-                    /* TODO
                     if(N_TO_1 == 2 && unique_authorPair.find(my_pair) == unique_authorPair.end()) {
                         cerr << " HERE IS THE K I want to print" << k << " ::::: " << macro.experience[k] << endl;
                         fout_learning_unique_authorPair << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
@@ -162,7 +160,6 @@ bool solve(int x) {
                         fout_learning_unique_authorPair << local_graph_features.degree[loop_counter] << ", " << local_graph_features.cent[loop_counter] << ", ";
                         fout_learning_unique_authorPair << global_graph_features.degree[loop_counter] << ", " << global_graph_features.cent[loop_counter] << ", ";
                     }
-                    */
 /*                    
                     if(N_TO_1 == 2 && unique_paper.find(macro.paper_id) == unique_paper.end()) {
                         fout_learning_unique_paper << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
@@ -172,13 +169,11 @@ bool solve(int x) {
 */
                 }
 //                fout_learning << winner << endl; 
-/* TODO
                 pair<int, int> my_pair = make_pair(macro.authors[indecies_that_have_past[0]], macro.authors[indecies_that_have_past[1]]);
                 if(N_TO_1 == 2 && unique_authorPair.find(my_pair) == unique_authorPair.end()) {
                     fout_learning_unique_authorPair << rev_macro_to_num[macro.macro_number].length() << ", " << winner << endl;  
                 }
                 unique_authorPair.insert(my_pair);
-*/
 
 /*
                 if(N_TO_1 == 2 && unique_paper.find(macro.paper_id) == unique_paper.end()) {
@@ -265,7 +260,7 @@ int main() {
 //    fout_learning.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + SMART + ".txt");
 //    fout_learning_unique_paper.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_paper" + SMART + ".txt");
 
-//  TODO  fout_learning_unique_authorPair.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
+    fout_learning_unique_authorPair.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
 
     fout_N_becomes_1.open("RawOutput/" + to_string(N_TO_1) + "_to_1_samples" + TYPE + SMART + ".txt");
     fout_N_becomes_1 << "MacroBody FinalName ";
@@ -283,15 +278,13 @@ int main() {
 //        fout_learning << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp +", IsMin" + temp + ", " + "IsMostRecent" + temp + ", "; 
 //        fout_learning_unique_paper << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp +", IsMin" + temp + ", " + "IsMostRecent" + temp + ", "; 
  
-/* TODO        
         fout_learning_unique_authorPair << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp + ", IsMin" + temp + ", " + "IsMostRecent" + temp + ", ";
         fout_learning_unique_authorPair << "MacroNameLength" + temp + ", " + "CoAuthorCountUsedMacro" + temp + ", LocalDegree" + temp + ", BetweenCentLocal" + temp + ", "  ; 
         fout_learning_unique_authorPair << "GlobalDegree" + temp + ", BetweenCentGlobal" + temp + ", "  ; 
-*/
     }
 //    fout_learning << "Label" << endl;
 //    fout_learning_unique_paper << "Label" << endl;
-// TODO    fout_learning_unique_authorPair << "MacroBodyLength, Label" << endl;
+    fout_learning_unique_authorPair << "MacroBodyLength, Label" << endl;
     cerr << "count of unique macros: " << macro_counter << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
        if( i % 10000 == 0 ) {
