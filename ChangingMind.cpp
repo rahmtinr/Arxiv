@@ -14,6 +14,8 @@
 
 using namespace std;
 
+set<pair<int, string> > macroBody_MacroName;
+set<string> different_documents;
 #if SOLVE_DEF
 bool solve(int x) {
     if(word_bucket[x].size() == 0){ 
@@ -129,6 +131,31 @@ bool solve(int x) {
                     fout_N_becomes_1 << RemoveSpaces(author_k) << " " << macros_used[k].paper_id << " " << macros_used[0].experience[indecies_that_have_past[k - 1]] << " " ;
                 }
                 fout_N_becomes_1 << endl;
+
+                string macro_body = rev_macro_to_num[macro.macro_number];
+                int special_characters = 0;
+                int dollar_signs = 0;
+                int back_slashes = 0;
+                int depth = 0, max_depth = 0;
+                for(int i = 0; i < (int)macro_body.length(); i++) {
+                    if(macro_body[i] == '{' || macro_body[i] =='#') {
+                        special_characters++;
+                    }
+                    if(macro_body[i] == '$') {
+                        dollar_signs++;
+                    }
+                    if(macro_body[i] == '\\') {
+                        back_slashes++;
+                    }
+                    if(macro_body[i] == '{') {
+                        depth++;
+                        max_depth = max(depth, max_depth);
+                    }
+                    if(macro_body[i] == '}') {
+                        depth--;
+                    }
+                }
+
                 cerr << " going into printing" << endl;
                 int loop_counter = -1;
                 for(int k : indecies_that_have_past) {
@@ -171,6 +198,7 @@ bool solve(int x) {
 //                fout_learning << winner << endl; 
                 pair<int, int> my_pair = make_pair(macro.authors[indecies_that_have_past[0]], macro.authors[indecies_that_have_past[1]]);
                 if(N_TO_1 == 2 && unique_authorPair.find(my_pair) == unique_authorPair.end()) {
+                    fout_learning_unique_authorPair << dollar_signs << ", " << back_slashes << ", " << max_depth << ", ";
                     fout_learning_unique_authorPair << rev_macro_to_num[macro.macro_number].length() << ", " << winner << endl;  
                 }
                 unique_authorPair.insert(my_pair);
@@ -221,6 +249,23 @@ int main() {
     */
     Read();
     sort(macros.begin(), macros.end());
+    /*
+    { // DATA INFORMATION
+        cerr << "Number of all macros: " << macros.size() << endl;
+        cerr << "Number of unique macros: " << macro_counter << endl;
+        int all_authors_count = 0;
+        for(int i = 0; i <(int) macros.size(); i++) {
+            macroBody_MacroName.insert(make_pair(macros[i].macro_number, macros[i].name));
+            all_authors_count += macros[i].authors.size();
+            different_documents.insert(macros[i].paper_id);
+        }
+        cerr << "Average number of macro names per macro: " <<  macroBody_MacroName.size() / (double)macro_counter << endl;
+        cerr << "Average number of authors per paper: " << all_authors_count / (double)macros.size() << endl;
+        cerr << "Number of documents with macros: " << different_documents.size() << endl;
+        different_documents.clear();
+        macroBody_MacroName.clear();
+    }
+    */
     for(int i = 0; i < (int) macros.size(); i++) {
         macro_paper_count[macros[i].macro_number]++;
         for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
@@ -235,8 +280,8 @@ int main() {
         }
     }
     cerr << " $$$$$ " << endl;
-// #if SOLVE_DEF
-#if false
+#if SOLVE_DEF
+// #if false
     preprocess();
 #endif
     for(int i = 0; i < (int)macros.size(); i++) {
@@ -254,7 +299,6 @@ int main() {
 
 #if SOLVE_DEF
 
-    fout_experience_changed_name.open("RawOutput/Experience_changed_name" + TYPE + ".txt");
     // Global is number of papers before, Local is number of times used this macro, has changed is 1 if different name, Completely new if first time name has came up
 
 //    fout_learning.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + SMART + ".txt");
@@ -272,7 +316,6 @@ int main() {
         fout_N_becomes_1 << "Author" + to_string(i) + "Name" + to_string(i) + " PrevPaperAuthor" + to_string(i) + " GlobalExperience" + to_string(i);
     }
     fout_N_becomes_1 << endl;
-    fout_experience_changed_name << "FinalGlobalExperience FinalLocalExperience GlobalCurrentExperience LocalCurrentExperience HasChanged CompletelyNew" << endl;
     for(int i = 1; i <= N_TO_1; i++) {
         string temp = to_string(i);
 //        fout_learning << "GlobalCurExp" + temp + ", LocalCurExp" + temp + ", LocalFracChange" + temp + ", IsMax" + temp +", IsMin" + temp + ", " + "IsMostRecent" + temp + ", "; 
@@ -284,6 +327,7 @@ int main() {
     }
 //    fout_learning << "Label" << endl;
 //    fout_learning_unique_paper << "Label" << endl;
+    fout_learning_unique_authorPair << "NumberOfDollarSigns, NumberOfBackSlashes, CurlyBraceMaxDepth, ";
     fout_learning_unique_authorPair << "MacroBodyLength, Label" << endl;
     cerr << "count of unique macros: " << macro_counter << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
@@ -299,6 +343,8 @@ int main() {
     // HEAPS LAW EACH MACRO BEING A BOOK AND NAMES BEING WORDS
     fout_heaps_law.open("RawOutput/heaps_law" + TYPE + ".txt");
     fout_heaps_law << "FinalLocalExperience Types Token" << endl;
+    fout_experience_changed_name.open("RawOutput/Experience_changed_name" + TYPE + ".txt");
+    fout_experience_changed_name << "FinalGlobalExperience FinalLocalExperience GlobalCurrentExperience LocalCurrentExperience HasChanged CompletelyNew" << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
         if( i % 10000 == 0 ) {
             cerr << i << endl;
@@ -319,7 +365,8 @@ int main() {
     for(int i = 1; i < 10; i++) {
         fout_k_2k[i].open("RawOutput/k_2k_prediction_" + to_string(5 * (1 << (i - 1)))  + ".txt");
         fout_k_2k[i] << "NumberofAuthorsOnFirstPaper, NumberOfPapers, GlobalMedian, GlobalMean, LocalClustering, GlobalClustering, ";
-        fout_k_2k[i] << "MacroBodyLength, NumberOfSpecialCharacters, UniqueNames, Label" << endl;
+        fout_k_2k[i] << "MacroBodyLength, NumberOfSpecialCharacters, UniqueNames, ";
+        fout_k_2k[i] << "NumberOfDollarSigns, NumberOfBackSlashes, MaxCurlyBracesDepth, Label" << endl;
     }
     cerr << "macro counter: " << macro_counter << endl;
     for(int i = 1; i < (int)macro_counter; i++) {

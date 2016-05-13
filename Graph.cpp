@@ -35,11 +35,15 @@ void bfs(int x, int author1, int author2, int max_index) {
         for(int i = 1; i < max_index; i++) {
             dist[temp][i] = dist[0][i];
         }
-    }
-    for(int j = 1; j <= 2; j++) {
-        for(int i = 1; i < max_index; i++) {
-            if(dist[0][i] == dist[j][i] + dist[j][x]) {
-                between_cent[j]++;
+    } else {
+        for(int j = 1; j <= 2; j++) {
+            if(j == temp) {
+                continue;
+            }
+            for(int i = 1; i < max_index; i++) {
+                if(dist[0][i] == dist[j][i] + dist[j][x]) {
+                    between_cent[j]++;
+                }
             }
         }
     }
@@ -93,8 +97,8 @@ GraphFeatures PreProcessLocalGraphFeatures(int x, Macro macro, int local_author_
     graph_features.degree[0] = graph[author1].size();
     graph_features.degree[1] = graph[author2].size();
     if(max_index > 2) {
-        graph_features.cent[0] = between_cent[1] / ((double)(max_index - 1) * (max_index - 2) / 2.0);
-        graph_features.cent[1] = between_cent[2] / ((double)(max_index - 2) * (max_index - 2) / 2.0);
+        graph_features.cent[0] = between_cent[1] / ((double)(max_index - 1) * (max_index - 2));
+        graph_features.cent[1] = between_cent[2] / ((double)(max_index - 1) * (max_index - 2));
     }
     return graph_features;
 }
@@ -162,8 +166,8 @@ GraphFeatures PreProcessGlobalGraphFeatures(int x, Macro macro, int local_author
     graph_features.degree[0] = graph[author1].size();
     graph_features.degree[1] = graph[author2].size();
     if(max_index > 2) {
-        graph_features.cent[0] = between_cent[1] / ((double)(max_index - 1) * (max_index - 2) / 2.0);
-        graph_features.cent[1] = between_cent[2] / ((double)(max_index - 2) * (max_index - 2) / 2.0);
+        graph_features.cent[0] = between_cent[1] / ((double)(max_index - 1) * (max_index - 2));
+        graph_features.cent[1] = between_cent[2] / ((double)(max_index - 1) * (max_index - 2));
     }
     return graph_features;
 }

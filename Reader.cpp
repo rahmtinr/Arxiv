@@ -114,5 +114,6 @@ void Read() {
         }
         getline(fin, s); // you have two empty lines
     }
+    cerr << " number of authors: " << author_counter << endl;
 }
 

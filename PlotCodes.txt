@@ -125,7 +125,7 @@ set xlabel "Local Experience"
 set ylabel "Fraction Change"
 set term png
 set output "Plots/LocalExperience_Change.png"
-plot[0:200][0:0.22] "PlotableData/LocalExperience_ChangeFraction.txt" title ""
+plot[0:200][0:0.4] "PlotableData/LocalExperience_ChangeFraction.txt" title ""
 
 set xlabel "Local Experience"
 set ylabel "Fraction New Experience"
