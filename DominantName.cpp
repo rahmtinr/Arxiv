@@ -18,12 +18,10 @@ map<int, vector<string>> body_names;
 
 
 bool solve(const pair<int, vector<string> > p) {
-	int body = p.first;
+	string body = rev_macro_to_num[p.first];
 	vector<string> names = p.second;
 	
-	cerr << p.first << endl;
-	cerr << names.size() << endl;
-	if(names.size() < 10) {
+	if(names.size() < 100) {
 		return false;
 	}
 	int different_names = 0;
@@ -42,7 +40,9 @@ bool solve(const pair<int, vector<string> > p) {
 		}
 		different_names = counter;
 	}
-	cout << body << " " << names.size() << endl;
+	if(different_names < 4) {
+		return false;
+	}
 	double *f[11], *derivation[11];
 	for(int i = 0; i < 11; i++) {
 		f[i] = new double [different_names + 1];
@@ -56,7 +56,7 @@ bool solve(const pair<int, vector<string> > p) {
 		int bound = names.size() * frac;
 		for (int i = 0; i < bound; i++) {
 			int index2 = normalized[names[i]];
-			f[index][index2] += 1 / bound;
+			f[index][index2] += 1.0 / bound;
 		}
 	}
 	for(int i = 0; i < 9; i++) {
@@ -64,13 +64,32 @@ bool solve(const pair<int, vector<string> > p) {
 			derivation[i][j] = f[i+1][j] - f[i][j];
 		}
 	}
-	
+	bool print = false;
+	int max_index = 0;
 	for(int j = 0; j < different_names; j++) {
 		if(f[9][j] > 0.3) {
-			cerr << "Biggest fraction: " << f[9][j] << " macro body:" << rev_macro_to_num[body] << " for macro name: " << rev_normalized[j] << endl;
-			cerr << "-----> " << f[4][j] << endl;
+			print = true;
+		}
+		if(f[9][max_index] < f[9][j]) {
+			max_index = j;
 		}
 	}
+	cerr << body << " " << names.size() << " " << f[9][max_index] << rev_normalized[max_index] << endl;
+	if(print == false) {
+		return false;
+	}
+	cout << body << " " << rev_normalized[max_index]  << endl;
+	for(int j = 0; j < different_names; j++) {
+		cout << rev_normalized[j] << " , ";
+	}
+	cout << endl;
+	for(int i = 0; i < 10; i++) {
+		for(int j = 0; j < different_names; j++) {
+			cout << f[i][j] << " , "; 
+		}
+		cout << endl;
+	}
+	cout << endl;
 	return true;
 }
 
@@ -79,12 +98,20 @@ int main() {
         cerr << " THERE IS A PROBLEM WITH THE SMART const variable" << endl;
         return 0;
     }
+	{
+		string s;
+		ifstream fin_important_macros("important_macros.txt");
+		while(getline(fin_important_macros, s)) {
+			important_macros.insert(s);
+		}
+	}
     Read();
 	cerr << "Macro size:  " << macros.size() << endl;
     sort(macros.begin(), macros.end());
     
+	
 	for(int i = 0; i < (int) macros.size(); i++) {
-		if(i % 100000 == 0) { 
+		if(i % 1000000 == 0) { 
 			cerr << i << endl;
 		}
         macro_paper_count[macros[i].macro_number]++;
@@ -106,22 +133,26 @@ int main() {
 		if(body.length() < 2 || body.length() > 1000) {
 			continue;
 		}
-		vector<string> temp = body_names[macros[i].macro_number];
-		temp.push_back(macros[i].name);
-		body_names.erase(macros[i].macro_number);
-		body_names.insert(make_pair(macros[i].macro_number, temp));
+		if(important_macros.find(rev_macro_to_num[macros[i].macro_number]) != important_macros.end()) {
+			vector<string> temp = body_names[macros[i].macro_number];
+			temp.push_back(macros[i].name);
+			body_names.erase(macros[i].macro_number);
+			body_names.insert(make_pair(macros[i].macro_number, temp));
+		}
     }
 
     cerr << " $$$$$ " << endl;
 	
-	int blah = 0;
+//	int blah = 0;
 	for(pair<int, vector<string> > p : body_names) {
 		cerr << " -----> " << p.first << endl;
 		solve(p);
+/*
 		blah++;
 		if(blah == 10) {
 			break;
 		}
+*/
 	}
 
     cerr << "-------------------------------------->" << data_points << endl;
