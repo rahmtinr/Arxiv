@@ -50,7 +50,7 @@ ofstream fout_max_path("RawOutput/MaxPath" + skipped_string + ".txt");
 ofstream fout_jaccard("RawOutput/Jaccard" + skipped_string + ".txt");
 ofstream fout_name_change("RawOutput/NameChange" + skipped_string + ".txt");
 ofstream fout_width[15];
-// ofstiream fout_one_significant("RawOutput/OnlyOneSignificantRoot" + skipped_string + ".txt");
+// ofstream fout_one_significant("RawOutput/OnlyOneSignificantRoot" + skipped_string + ".txt");
 
 
 
@@ -239,11 +239,12 @@ map<int, int> author_experience; // at the end of the code it will be final expe
 int num_above_cut = 0;
 
 bool solve(int x) {
+	cerr << x << endl;
     if(word_bucket[x].size() < Macro_paper_usage || rev_macro_to_num[word_bucket[x][0].macro_number].length() < Macro_length_filter) { // macro needs to be used and should have a length
         return false;
     }
-//    cerr << x  << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl;
-//    cerr << "Number of papers: " << word_bucket[x].size() << endl;
+    cerr << x  << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl;
+    cerr << "Number of papers: " << word_bucket[x].size() << endl;
     num_above_cut++;
 //       cerr << "STARTING FEYNMAN" << endl;
     // Richard Feynman trace back
@@ -263,11 +264,11 @@ bool solve(int x) {
     fill(local_mark.begin(), local_mark.end(), 0);
     fill(rev_comp.begin(), rev_comp.end(), 0); 
 
-//    cerr << "BUILDING GRAPH " << endl;
+    cerr << "BUILDING GRAPH " << endl;
     for(int i = 0; i < (int)word_bucket[x].size(); i++) {
-//        cerr << i << " ----------- " << word_bucket[x].size()  << endl;
+        cerr << i << " ----------- " << word_bucket[x].size()  << endl;
         for(int author : word_bucket[x][i].authors) {
-//            cerr << rev_author_to_num[author] << endl;
+            cerr << rev_author_to_num[author] << endl;
             if(local_author_id.find(author) == local_author_id.end()){
                 rev_local_author_id[local_counter] = author;
                 local_author_id[author] = local_counter++;
@@ -298,7 +299,7 @@ bool solve(int x) {
             }
         }
     }
-//    cerr << "Number of authors: " << local_counter << endl;
+    cerr << "Number of authors: " << local_counter << endl;
 #if 1
     //    cerr << "STARTED SCC" << endl;
     // strongly connected component
@@ -307,7 +308,7 @@ bool solve(int x) {
             StrongDfs(i);
         }
     }
-//    cerr << "FINISHING TIME IS DONE" << endl;
+    cerr << "FINISHING TIME IS DONE" << endl;
     fill(local_mark.begin(), local_mark.end(), 0);
     int comp_num = 1;
     set<int> comps_to_check;
@@ -327,7 +328,7 @@ bool solve(int x) {
             comp_num++;
         }
     }
-//    cerr << "GOT THE COMPONENTS" << endl;
+    cerr << "GOT THE COMPONENTS" << endl;
     for(int i = 0; i < local_counter; i++) {
         for(int x : graph[i]) {
             if(rev_comp[x] != rev_comp[i]) {
@@ -335,9 +336,9 @@ bool solve(int x) {
             }
         }
     }
-//    cerr << "Num of components: " << comp_num << endl;
-//    cerr << "Num of candidate components to check: " << comps_to_check.size() << endl;
-    //    cerr << "FIND THE BEST COMPONENT" << endl;
+    cerr << "Num of components: " << comp_num << endl;
+    cerr << "Num of candidate components to check: " << comps_to_check.size() << endl;
+    cerr << "FIND THE BEST COMPONENT" << endl;
     int max_people = 0;
     int best_comp = 0;
     int second_max_people = 0;
@@ -357,7 +358,7 @@ bool solve(int x) {
         }
     }
     // Find the intersection of two biggest sets.
-//    cerr << " Finding the intersection of two biggest sets" << endl;
+    cerr << " Finding the intersection of two biggest sets" << endl;
     fill(local_mark.begin(), local_mark.end(), 0);
     int temp = comp[best_comp][0];
     CountDfs(temp);
@@ -365,7 +366,7 @@ bool solve(int x) {
     if(comp[second_best_comp].size() > 0 && local_mark[comp[second_best_comp][0]] == 0) {
         intersection -= CountDfs(comp[second_best_comp][0]);
     }
-//    cerr << " LOOK INTO THE BEST COMPONENT" << endl;
+    cerr << " LOOK INTO THE BEST COMPONENT" << endl;
     set<int> seed_authors;
     set<int> seed_authors_copy;
     set<int> seed_paper_indecies;
@@ -383,7 +384,7 @@ bool solve(int x) {
             }
         }
     }
-//    cerr << " Finding stats " << endl;
+    cerr << " Finding stats " << endl;
     {
         fill(local_mark.begin(), local_mark.end(), 0);
         int local_biggest_interval;
@@ -602,7 +603,7 @@ int main() {
                 getline(fin, s);
                 continue;
             }
-            if(macro.authors.size() < 50 && temp != "") { 
+            if(macro.authors.size() < 50 && macro.authors.size() > 0 && temp != "") { 
                 macros.push_back(macro); 
             }
         }
@@ -623,6 +624,8 @@ int main() {
         }
     }
     cerr << macro_counter << " different macros used in  " << macros.size() << " comments" << endl;
+	cerr << "authors count:" << author_experience.size() << endl;
+
     for(int i = 0; i < (int)macros.size(); i++) {
         word_bucket[macros[i].macro_number].push_back(macros[i]);
     }

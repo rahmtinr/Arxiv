@@ -52,17 +52,18 @@ cat RawOutput/2_to_1_samples_nosmart.txt | awk '{if($2==$3){label=1;a[$5]++}else
 
 #### OLDER VS YOUNGER
 ## create YoungerVsOlder ------> NEED TO CHECK the file names and if it's exactly two
-cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPair_nosmart.txt | awk -F ', ' 'BEGIN{print "YoungerExperience OlderExperience winner"}{if(NR>1){ temp1=$1; temp2=$11; winner=$22; total++; if($1>$11){ temp1=$11; temp2=$1; winner = 3-$22; count++} print temp1, temp2, winner}}' > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair-ExactTwo.txt
+cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPair_nosmart.txt | awk -F ', ' 'BEGIN{print "YoungerExperience OlderExperience winner"}{if(NR>1){ temp1=$1; temp2=$11; winner=$22; total++; if($1>$11){ temp1=$11; temp2=$1; winner = 3-$22; count++} print temp1, temp2, winner}}' > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt
 
 # Create the probability of younger winning given older-younger
-bucket=10;cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair-ExactTwo.txt | awk -v bucket=$bucket 'BEGIN{print "Difference FractionOlderWin Instances"}{if(NR>1) {total[int(($2-$1)/bucket)]++; if($3 == 2) OlderWin[int(($2-$1)/bucket)]++;}}END{for(i in total) print i * bucket, OlderWin[i]/total[i], total[i]}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_AgeDifference.txt
+bucket=10;cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk -v bucket=$bucket 'BEGIN{print "Difference FractionOlderWin Instances"}{if(NR>1) {total[int(($2-$1)/bucket)]++; if($3 == 2) OlderWin[int(($2-$1)/bucket)]++;}}END{for(i in total) print i * bucket, OlderWin[i]/total[i], total[i]}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_AgeDifference.txt
 
 
 
 # Create the probability of older winning given his experience
 
-bucket=10; cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair-ExactTwo.txt | awk -v bucket=$bucket 'BEGIN{print "OlderAge FractionOlderWins Instaces"}{if(NR>1){ total[int($2/bucket)]++; if($3 == 2) OlderWin[int($2/bucket)]++;}}END{for(i in total) print i * bucket, OlderWin[i]/total[i], total[i]}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_OlderExperience.txt
+bucket=10; cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk -v bucket=$bucket 'BEGIN{print "OlderAge FractionOlderWins Instaces"}{if(NR>1){ total[int($2/bucket)]++; if($3 == 2) OlderWin[int($2/bucket)]++;}}END{for(i in total) print i * bucket, OlderWin[i]/total[i], total[i]}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_OlderExperience.txt
 
 
 # create heat map on probability of winning ($2 is older) so he is the x-axis(below the diagonal)
-cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair-ExactTwo.txt | awk 'BEGIN{print "x y heat"}{if(NR>1){total[$2][$1]++; if($3 == 2) OlderWin[$2][$1]++;}}END{for(x=1; x < 40; x++) { for(y=0; y<40; y++) {if(total[x][y]==0) {print x, y, 0;} else {print x, y, OlderWin[x][y]/total[x][y]}}}}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_heatmap.txt
+cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk 'BEGIN{print "x y heat"}{if(NR>1){total[$2][$1]++; if($3 == 2) OlderWin[$2][$1]++;}}END{for(x=1; x < 40; x++) { for(y=0; y<40; y++) {if(total[x][y]==0) {print x, y, 0;} else {print x, y, OlderWin[x][y]/total[x][y]}}}}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_heatmap.txt
+
