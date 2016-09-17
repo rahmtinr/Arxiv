@@ -78,7 +78,7 @@ bool solve(const pair<int, vector<string> > p) {
 	if(print == false) {
 		return false;
 	}
-	cout << body << " " << rev_normalized[max_index]  << endl;
+	cout << body << " " << names.size()  << endl;
 	for(int j = 0; j < different_names; j++) {
 		cout << rev_normalized[j] << " , ";
 	}
