@@ -57,7 +57,7 @@ void HeapsLawForAPerson() {
 
 
     bool check = false;
-    ofstream fout_sample_author_macros("RawOutput/SampleAuthorMacroUsage.txt");
+    ofstream fout_sample_author_macros(folder + "SampleAuthorMacroUsage.txt");
     for(pair<int, int> kv : author_num) {
         int macros_used_by_author = author_denom[kv.first];
         int uniq_macros_used_by_author = kv.second;

@@ -94,6 +94,7 @@ bool solve(const pair<int, vector<string> > p) {
 }
 
 int main() {
+	folder = "RawOutput/Name/";
     if(SMART != "_smart" && SMART != "_nosmart") {
         cerr << " THERE IS A PROBLEM WITH THE SMART const variable" << endl;
         return 0;

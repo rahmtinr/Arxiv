@@ -11,6 +11,6 @@
 #include"Core.h"
 using namespace std;
 
-void Read();
+void Read(string);
 
 #endif

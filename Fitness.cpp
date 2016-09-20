@@ -3,13 +3,13 @@ using namespace std;
 
 #if K_2K_DEF
 ofstream fout_k_2k[10];
-ofstream fout_k_2k_thresholds("RawOutput/k_2k_thresholds.txt");
+ofstream fout_k_2k_thresholds(folder + "k_2k_thresholds.txt");
 vector<OutputElement> k_2k[10];
 void prediction_k_2k(int x) {
     if(word_bucket[x].size() == 0) {
         return;
     }
-    if(!GoodMacro(word_bucket[x][0], macro_paper_count[x] - 10, rev_macro_to_num[x].length() - 10)) { // macro needs to be used and should have a length
+    if(folder == "RawOutput/Name" && !GoodMacro(word_bucket[x][0], macro_paper_count[x] - 10, rev_macro_to_num[x].length() - 10)) { // macro needs to be used and should have a length
         return;
     }
 
@@ -116,7 +116,7 @@ ofstream fout_author_fitness[11];
 void AuthorFitness() {
     int window = 5;
     for(int i = 1; i <= 10; i++) {
-        fout_author_fitness[i].open("RawOutput/author_fitness_" + to_string(i * window)  + ".txt");
+        fout_author_fitness[i].open(folder + "author_fitness_" + to_string(i * window)  + ".txt");
         fout_author_fitness[i] << "PapersRevealedCount, AllMacroUsage, UniqueMacroUsage, ";
         fout_author_fitness[i] << "CoAuthorCount, ChangeFraction, ChangeFractionHighUsage, FinalGlobalExp" << endl;
 

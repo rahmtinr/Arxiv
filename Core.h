@@ -6,10 +6,10 @@
 #include<set>
 #include"Macro.h"
 
-#define K_2K_DEF false
+#define K_2K_DEF true 
 #define SOLVE_DEF true
-#define AUTHOR_HEAPS_LAW_DEF false
-#define MACRO_HEAPS_LAW_DEF false
+#define AUTHOR_HEAPS_LAW_DEF true
+#define MACRO_HEAPS_LAW_DEF true
 #define LONGEVITY_DEF false
 
 extern ofstream fout_experience_changed_name;
@@ -39,6 +39,7 @@ extern vector<int> person_path[1000 * 1000];
 extern int person_pointer[1000 * 1000];
 extern int change[1000 * 1000];
 extern set<int> adj_list[1000 * 1000];
+extern string folder;
 
 extern vector<Macro> macros;
 extern set<string> important_macros;

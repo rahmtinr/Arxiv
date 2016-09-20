@@ -98,7 +98,7 @@ bool solve(int x) {
         }
         bool same_date = false;
         if(check == true && count_equal_names == 1 && (int)indecies_that_have_past.size() == N_TO_1 && (null_names == 0 || (null_names == 1 && SMART == "_smart" && (int)macro.authors.size() == N_TO_1))) {
-            cerr << " salam " << endl;
+//            cerr << " salam " << endl;
             for(int j = 1; j <= (int)indecies_that_have_past.size(); j++) {
                 if(macros_used[j] == macros_used[most_recent_index]) { // only checks the date
                     continue;
@@ -107,20 +107,20 @@ bool solve(int x) {
                     most_recent_index = j - 1;
                 }
             }
-            cerr << " finished here " << endl;
+//            cerr << " finished here " << endl;
             for(int j = 1; j <(int) macros_used.size(); j++) { 
                 if(macros_used[0] == macros_used[j]) {
                     same_date = true;
                     break;
                 }
             }
-            cerr << " YOHOO " << endl;
+//            cerr << " YOHOO " << endl;
             if(same_date == false) {
-                cerr << " aha " << endl;
+//                cerr << " aha " << endl;
                 GraphFeatures local_graph_features = PreProcessLocalGraphFeatures(x, word_bucket[x][i], local_author_count, indecies_that_have_past[0], indecies_that_have_past[1]);
-                cerr << "YAY local done! " << endl;
+//                cerr << "YAY local done! " << endl;
                 GraphFeatures global_graph_features = PreProcessGlobalGraphFeatures(x, word_bucket[x][i], local_author_count, indecies_that_have_past[0], indecies_that_have_past[1]);
-                cerr << "YAY global done! " << endl;
+//                cerr << "YAY global done! " << endl;
                 fout_N_becomes_1 << RemoveSpaces(rev_macro_to_num[macro.macro_number]) << ": ";
                 for(int k = 0; k < (int)macros_used.size(); k++) {
                     fout_N_becomes_1 << macros_used[k].name << " ";
@@ -156,7 +156,7 @@ bool solve(int x) {
                     }
                 }
 
-                cerr << " going into printing" << endl;
+//                cerr << " going into printing" << endl;
                 int loop_counter = -1;
                 for(int k : indecies_that_have_past) {
                     loop_counter++;
@@ -180,7 +180,7 @@ bool solve(int x) {
 */
                     pair<int, int> my_pair = make_pair(macro.authors[indecies_that_have_past[0]], macro.authors[indecies_that_have_past[1]]);
                     if(N_TO_1 == 2 && unique_authorPair.find(my_pair) == unique_authorPair.end()) {
-                        cerr << " HERE IS THE K I want to print" << k << " ::::: " << macro.experience[k] << endl;
+//                        cerr << " HERE IS THE K I want to print" << k << " ::::: " << macro.experience[k] << endl;
                         fout_learning_unique_authorPair << macro.experience[k] << ", " << person_pointer[local_author] << ", " << change[local_author] / denom << ", "; 
                         fout_learning_unique_authorPair << is_max << ", " << is_min << ", " << is_most_recent << ", " << macros_used[loop_counter + 1].name.length() << ", ";
                         fout_learning_unique_authorPair << macro.co_authors_count_used_previously[k] << ", ";
@@ -227,19 +227,32 @@ bool solve(int x) {
                 }
             }
         }
- //       cerr << i << " finished!" << endl;
+        cerr << i << " finished!" << endl;
     }
     return true;
 }
 #endif
 
-int main() {
+int main(int argc, char *argv[]) {
     if(SMART != "_smart" && SMART != "_nosmart") {
         cerr << " THERE IS A PROBLEM WITH THE SMART const variable" << endl;
         return 0;
     }
-    /*
-    {
+	string input_file;
+	if(argc != 2) {
+		cerr << " YOU HAVE NOT SET THE BODY PARAMETER" << endl;
+		return 0;
+	}
+	cerr << argv[0] << " " << argv[1] << endl;
+	if(string(argv[1]) == "body")  { // different names hit same body
+		folder = "RawOutput/Body/";
+		input_file = "All_Arxiv_Macros_body.txt";
+	} else {
+		folder = "RawOutput/Name/";
+		input_file = "All_Arxiv_Macros.txt";
+	}
+	/*
+	{
         ifstream fin_important_macros("Macros_with_length_above_4.txt");
         string s;
         while(getline(fin_important_macros, s)) {
@@ -247,7 +260,7 @@ int main() {
         }
     }
     */
-    Read();
+    Read(input_file);
     sort(macros.begin(), macros.end());
     /*
     { // DATA INFORMATION
@@ -304,9 +317,9 @@ int main() {
 //    fout_learning.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + SMART + ".txt");
 //    fout_learning_unique_paper.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_paper" + SMART + ".txt");
 
-    fout_learning_unique_authorPair.open("RawOutput/" + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
+    fout_learning_unique_authorPair.open(folder + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
 
-    fout_N_becomes_1.open("RawOutput/" + to_string(N_TO_1) + "_to_1_samples" + TYPE + SMART + ".txt");
+    fout_N_becomes_1.open(folder + to_string(N_TO_1) + "_to_1_samples" + TYPE + SMART + ".txt");
     fout_N_becomes_1 << "MacroBody FinalName ";
     for(int i = 1; i <= N_TO_1; i++) {
         fout_N_becomes_1 << "Author" + to_string(i) + "MacroName ";
@@ -341,9 +354,9 @@ int main() {
 
 #if MACRO_HEAPS_LAW_DEF
     // HEAPS LAW EACH MACRO BEING A BOOK AND NAMES BEING WORDS
-    fout_heaps_law.open("RawOutput/heaps_law" + TYPE + ".txt");
+    fout_heaps_law.open(folder + "heaps_law" + TYPE + ".txt");
     fout_heaps_law << "FinalLocalExperience Types Token" << endl;
-    fout_experience_changed_name.open("RawOutput/Experience_changed_name" + TYPE + ".txt");
+    fout_experience_changed_name.open(folder + "Experience_changed_name" + TYPE + ".txt");
     fout_experience_changed_name << "FinalGlobalExperience FinalLocalExperience GlobalCurrentExperience LocalCurrentExperience HasChanged CompletelyNew" << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
         if( i % 10000 == 0 ) {
@@ -356,14 +369,14 @@ int main() {
 
 #if AUTHOR_HEAPS_LAW_DEF
     // HEAPS LAW EACH PERSON BEING A BOOK
-    fout_author_heaps.open("RawOutput/author_heaps.txt");
+    fout_author_heaps.open(folder + "author_heaps.txt");
     fout_author_heaps << "Macros UniqueMacros" << endl;
     HeapsLawForAPerson();
 #endif
 
 #if K_2K_DEF
     for(int i = 1; i < 10; i++) {
-        fout_k_2k[i].open("RawOutput/k_2k_prediction_" + to_string(5 * (1 << (i - 1)))  + ".txt");
+        fout_k_2k[i].open(folder +"k_2k_prediction_" + to_string(5 * (1 << (i - 1)))  + ".txt");
         fout_k_2k[i] << "NumberofAuthorsOnFirstPaper, NumberOfPapers, GlobalMedian, GlobalMean, LocalClustering, GlobalClustering, ";
         fout_k_2k[i] << "MacroBodyLength, NumberOfSpecialCharacters, UniqueNames, ";
         fout_k_2k[i] << "NumberOfDollarSigns, NumberOfBackSlashes, MaxCurlyBracesDepth, Label" << endl;

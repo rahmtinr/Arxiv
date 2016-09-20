@@ -1,7 +1,7 @@
 #include"Reader.h"
 
-void Read() {
-    ifstream fin("All_Arxiv_Macros.txt");
+void Read(string filename) {
+    ifstream fin(filename);
     int author_counter = 1;
     string s, temp;
     int skipped = 0;
@@ -85,7 +85,6 @@ void Read() {
             while(ss >> s) {
                 macro.categories.push_back(s);
             }
-
         }
         {
             while(getline(fin, s)) {

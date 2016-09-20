@@ -37,7 +37,7 @@ vector<int> person_path[1000 * 1000];
 int person_pointer[1000 * 1000];
 int change[1000 * 1000];
 set<int> adj_list[1000 * 1000];
-
+string folder;
 
 vector<Macro> macros;
 set<string> important_macros;
@@ -49,7 +49,7 @@ int macro_counter = 1;
 
 
 bool GoodMacro(Macro macro, int count, int len) {
-    if(count < MACRO_PAPER_USAGE_FILTER || len < MACRO_LENGTH_FILTER) { // macro needs to be used and should have a length
+    if(count < MACRO_PAPER_USAGE_FILTER || (len < MACRO_LENGTH_FILTER && folder == "/RawOutput/Name")) { // macro needs to be used and should have a length
         return false;
     }
     return true;
