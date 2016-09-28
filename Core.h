@@ -6,10 +6,10 @@
 #include<set>
 #include"Macro.h"
 
-#define K_2K_DEF true 
-#define SOLVE_DEF true
-#define AUTHOR_HEAPS_LAW_DEF true
-#define MACRO_HEAPS_LAW_DEF true
+#define K_2K_DEF false 
+#define SOLVE_DEF false
+#define AUTHOR_HEAPS_LAW_DEF false
+#define MACRO_HEAPS_LAW_DEF false
 #define LONGEVITY_DEF false
 
 extern ofstream fout_experience_changed_name;

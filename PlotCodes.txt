@@ -203,4 +203,12 @@ set output "Plots/FinalLocalExperience_UnchangedNames.png"
 set key outside
 plot "PlotableData/FinalLocalExperience_UnchangedNames.txt"  using 1:3 with lines title ""
 
+_________________________________________________________________
+
+set xlabel "Start of Interval"
+set ylabel "Median of fraction of Authors using it"
+set xrange[0:1]
+set term png
+set output "Plots/EarlyLate_SlidingWindow.png"
+plot for [col=3:4] "DominantName/SlidingWindow.txt"  using 1:col with lines title columnheader
 

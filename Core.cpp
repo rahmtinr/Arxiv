@@ -49,7 +49,8 @@ int macro_counter = 1;
 
 
 bool GoodMacro(Macro macro, int count, int len) {
-    if(count < MACRO_PAPER_USAGE_FILTER || (len < MACRO_LENGTH_FILTER && folder == "/RawOutput/Name")) { // macro needs to be used and should have a length
+    if(count < MACRO_PAPER_USAGE_FILTER || (len < MACRO_LENGTH_FILTER && folder == "/RawOutput/Name") ||
+			(len > 50 && folder == "/RawOutput/Body") ) { // macro needs to be used and should have a length
         return false;
     }
     return true;
