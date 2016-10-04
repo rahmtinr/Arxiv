@@ -212,3 +212,10 @@ set term png
 set output "Plots/EarlyLate_SlidingWindow.png"
 plot for [col=3:4] "DominantName/SlidingWindow.txt"  using 1:col with lines title columnheader
 
+set xlabel "Start of Interval"
+set ylabel "Changing point"
+set term png
+set output "Plots/EarlyLate_ChangeOverPoint.png"
+plot "DominantName/ExchangePointOfEarlyAndLate.txt" with lines title ChangeOver
+
+

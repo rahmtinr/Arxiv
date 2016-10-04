@@ -16,14 +16,16 @@ using namespace std;
 
 map<int, vector<string>> body_names;
 
+ofstream fout_similar_but_far_names("DominantName/SimilarButFarNames.txt");
 
-bool solve(const pair<int, vector<string> > p) {
+bool solve(const pair<int, vector<string> > p) { // used at least a hundred times, has at least 4 names
 	string body = rev_macro_to_num[p.first];
 	vector<string> names = p.second;
 	
 	if(names.size() < 100) {
 		return false;
 	}
+
 	int different_names = 0;
 	int counter = 0;
 	map<string, int> normalized;
@@ -43,47 +45,50 @@ bool solve(const pair<int, vector<string> > p) {
 	if(different_names < 4) {
 		return false;
 	}
-	double *f[11], *derivation[11];
-	for(int i = 0; i < 11; i++) {
+	double *f[2];
+	for(int i = 0; i < 2; i++) {
 		f[i] = new double [different_names + 1];
 		for(int j = 0; j < different_names; j++) {
 			f[i][j] = 0;
 		}
-		derivation[i] = new double [different_names + 1];
 	}
-	int index = 0;
-	for(double frac = 0.1; frac <= 1; frac += 0.1, index++) {
+	{
+		double frac = 0.3;
 		int bound = names.size() * frac;
 		for (int i = 0; i < bound; i++) {
 			int index2 = normalized[names[i]];
-			f[index][index2] += 1.0 / bound;
+			f[0][index2] += 1.0 / bound;
 		}
 	}
-	for(int i = 0; i < 9; i++) {
-		for(int j = 0; j < different_names; j++) {
-			derivation[i][j] = f[i+1][j] - f[i][j];
+	{
+		double frac = 0.7;
+		int bound = names.size() * frac;
+		for (int i = names.size() - 1; i >= bound; i--) {
+			int index2 = normalized[names[i]];
+			f[1][index2] += 1.0 / (names.size() - bound);
 		}
 	}
 	bool print = false;
 	int max_index = 0;
 	for(int j = 0; j < different_names; j++) {
-		if(f[9][j] > 0.3) {
+		if(f[1][j] > 0.3) {
 			print = true;
 		}
-		if(f[9][max_index] < f[9][j]) {
+		if(f[1][max_index] < f[1][j]) {
 			max_index = j;
 		}
 	}
-	cerr << body << " " << names.size() << " " << f[9][max_index] << rev_normalized[max_index] << endl;
 	if(print == false) {
 		return false;
 	}
+	
+	cerr << body << " " << names.size() << " " << f[1][max_index] << " " << rev_normalized[max_index] << endl;
 	cout << body << " " << names.size()  << endl;
 	for(int j = 0; j < different_names; j++) {
 		cout << rev_normalized[j] << " , ";
 	}
 	cout << endl;
-	for(int i = 0; i < 10; i++) {
+	for(int i = 0; i < 2; i++) {
 		for(int j = 0; j < different_names; j++) {
 			cout << f[i][j] << " , "; 
 		}
@@ -106,7 +111,7 @@ int main() {
 			important_macros.insert(s);
 		}
 	}
-    Read();
+    Read("All_Arxiv_Macros.txt");
 	cerr << "Macro size:  " << macros.size() << endl;
     sort(macros.begin(), macros.end());
     
@@ -155,8 +160,6 @@ int main() {
 		}
 */
 	}
-
-    cerr << "-------------------------------------->" << data_points << endl;
     return 0;
 } 
 
