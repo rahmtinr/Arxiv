@@ -37,11 +37,12 @@ set output "../Plots/BiggestComponent_SecondBiggest.png"
 plot [0:1][0:1] "Biggest_SecondBiggest.txt" title ""
 
 
-set xlabel 'Max path length'
-set ylabel 'Time (in months)'
-set term png
-set output '../Plots/MaxPath_MaxTime.png'
-plot "MaxPath_MaxTime.txt" title "" with lines 
+set xlabel 'Max path length' font ", 16"
+set ylabel 'Time (in months)' font ", 18"
+set tics font ", 16"
+set term pngcairo
+set output 'Plots/MaxPath_MaxTime.png'
+plot "PlotableData/MaxPath_MaxTime.txt" title "" with lines linewidth 3 
 
 
 
@@ -104,41 +105,55 @@ set xlabel "Global Experience"
 set ylabel "Fraction New Experience"
 set term png
 set output "Plots/GlobalExperience_NewExperience.png"
-plot[0:200][0:1] "PlotableData/GlobalExperience_NewExperience.txt" title ""
+plot[1:200] "PlotableData/GlobalExperience_NewExperience.txt" title ""
 
 
-
-set xlabel "Global Experience"
-set ylabel "Fraction Change"
-set term png
+set xlabel "Global Experience(End Of Window)"
+set ylabel "Percentage of Name Changed"
+set term pngcairo dashed
+#set xrange [0:178]
 set output "Plots/GlobalExperience_Change.png"
-plot[0:200][0:1] "PlotableData/GlobalExperience_ChangeFraction.txt" title ""
+set key left top
+plot "PlotableData/GlobalExperience_ChangeFraction.txt" using 1:2 with lines linecolor 3 linewidth 2 title "Prob change from previous paper", "" using 1:2:3 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
 
 
 set xlabel "Local Experience"
 set ylabel "Fraction New Experience"
 set term png
 set output "Plots/LocalExperience_NewExperience.png"
-plot[0:200][0:0.22] "PlotableData/LocalExperience_NewExperience.txt" title ""
+plot[3:200] "PlotableData/LocalExperience_NewExperience.txt" title ""
 
 set xlabel "Local Experience"
 set ylabel "Fraction Change"
 set term png
 set output "Plots/LocalExperience_Change.png"
-plot[0:200][0:0.4] "PlotableData/LocalExperience_ChangeFraction.txt" title ""
+plot[1:200] "PlotableData/LocalExperience_ChangeFraction.txt" title ""
+
+
+
+
+set xlabel "Local Experience(End Of Window)"
+set ylabel "Percentage of Name Changed"
+set term pngcairo dashed
+#set xrange [0:178]
+set output "Plots/LocalExperience_Change.png"
+set key right top
+plot "PlotableData/LocalExperience_ChangeFraction.txt" using 1:2 with lines linecolor 3 linewidth 2 title "Prob change from previous paper", "" using 1:2:3 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
+
+
 
 set xlabel "Local Experience"
 set ylabel "Fraction New Experience"
 set term png
 set output "Plots/LocalExperience_NewExperience-FinalLocalExpLargerThan100.png"
-plot[0:200][0:1] "PlotableData/LocalExperience_NewExperience-FinalLocalLarger50.txt" title "50" "PlotableData/LocalExperience_NewExperience-FinalLocalLarger100.txt" title "100"
+plot[1:200][0:0.4] "PlotableData/LocalExperience_NewExperience-FinalLocalLarger50.txt" title "50" "PlotableData/LocalExperience_NewExperience-FinalLocalLarger100.txt" title "100"
 
 
 set xlabel "Local Experience"
 set ylabel "Fraction Change"
 set term png
 set output "Plots/LocalExperience_Change-FinalLocalExpLargerThan100.png"
-plot[0:200][0:1] "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger0.txt" title "0" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger10.txt" title "10" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger20.txt" title "20" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger30.txt" title "30"
+plot[1:200][0:1] "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger0.txt" title "0" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger10.txt" title "10" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger20.txt" title "20" "PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger30.txt" title "30"
 
 
 COLOR PLOTS LOCAL FILTER
@@ -151,9 +166,8 @@ set output "Plots/LocalExperience_Change-All-wide.png"
 set key outside
 set yrange [0:0.2]
 plot for [col=2:14] "PlotableData/LocalExperience_ChangeFraction-All-wide.txt"  using 1:col with lines title columnheader
-
-COLOR PLOTS GLOBAL FILTER
-
+##########################################################################
+#COLOR PLOTS GLOBAL FILTER ALL - WIDE
 set xlabel "Local Experience"
 set ylabel "Fraction Change"
 set term png
@@ -161,11 +175,68 @@ set title "Global"
 set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-wide.png"
 set key outside
 set xrange [0:40]
-set yrange [0:0.12]
+set yrange [0:0.30]
 plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-wide.txt"  using 1:col with lines title columnheader
 
-COLOR PLOTS GLOBAL FILTER EARLY LIFE
+#COLOR PLOTS GLOBAL FILTER ALL - NARROW
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-narrow.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.30]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-narrow.txt"  using 1:col with lines title columnheader
 
+#COLOR PLOTS GLOBAL FILTER ALL - NORMAL
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-All.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.30]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-All.txt"  using 1:col with lines title columnheader
+
+#COLOR PLOTS GLOBAL FILTER EarlyLife - WIDE
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-EarlyLife-wide.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.30]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-wide.txt"  using 1:col with lines title columnheader
+
+#COLOR PLOTS GLOBAL FILTER EarlyLife - NARROW
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-EarlyLife-narrow.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.30]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-narrow.txt"  using 1:col with lines title columnheader
+
+#COLOR PLOTS GLOBAL FILTER EARLYLIFE - NORMAL
+set xlabel "Local Experience"
+set ylabel "Fraction Changed"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-EarlyLife-All.png"
+set key outside
+set xrange [0:40]
+set yrange [0:0.30]
+plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-All.txt"  using 1:col with lines title columnheader
+
+
+
+COLOR PLOTS GLOBAL FILTER EARLY LIFE - NORMAL
+#limit of 40
 set xlabel "Local Experience"
 set ylabel "Fraction Change"
 set term png
@@ -173,10 +244,21 @@ set title "Global"
 set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-EarlyLife.png"
 set key outside
 set xrange [0:40]
-set yrange [0:0.02]
+set yrange [0:0.03]
 plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-EarlyLife.txt"  using 1:col with lines title columnheader
 
+#limit of 70
+set xlabel "Local Experience"
+set ylabel "Fraction Change"
+set term png
+set title "Global"
+set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-EarlyLife--70.png"
+set key outside
+set xrange [0:70]
+set yrange [0:0.03]
+plot for [col=2:8] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-EarlyLife--70.txt"  using 1:col with lines title columnheader
 
+#############################################################################
 
 
 set xlabel "Final Local Experience"
@@ -209,13 +291,256 @@ set xlabel "Start of Interval"
 set ylabel "Median of fraction of Authors using it"
 set xrange[0:1]
 set term png
-set output "Plots/EarlyLate_SlidingWindow.png"
-plot for [col=3:4] "DominantName/SlidingWindow.txt"  using 1:col with lines title columnheader
+set output "Plots/EarlyLate_SlidingWindow_0.1.png"
+plot for [col=3:4] "DominantName/SlidingWindow_0.1.txt"  using 1:col with lines title columnheader
 
 set xlabel "Start of Interval"
-set ylabel "Changing point"
+set ylabel "Median of fraction of Authors using it"
+set xrange[0:1]
 set term png
-set output "Plots/EarlyLate_ChangeOverPoint.png"
-plot "DominantName/ExchangePointOfEarlyAndLate.txt" with lines title ChangeOver
+set output "Plots/EarlyLate_SlidingWindow_0.2.png"
+plot for [col=3:4] "DominantName/SlidingWindow_0.2.txt"  using 1:col with lines title columnheader
+
+set xlabel "Macro Lifetime(End of Window)"
+set ylabel "Median of Percentage of Authors Using"
+set xrange[3:101]
+set term png
+set output "Plots/EarlyLate_SlidingWindow_0.3.png"
+plot for [col=3:4] "DominantName/SlidingWindow_0.3.txt"  using 2:col with lines linewidth 3 title columnheader
+
+
+set xlabel "Start of Interval"
+set ylabel "Probability"
+set xrange[1:95]
+set term png
+set output "Plots/EarlyLate_ChangeOverPoint_0.1.png"
+plot "DominantName/ExchangePointOfEarlyAndLate_0.1.txt" with lines title "ChangeOver"
+
+set xlabel "Start of Interval"
+set ylabel "Probability"
+set xrange[1:95]
+set term png
+set output "Plots/EarlyLate_ChangeOverPoint_0.2.png"
+plot "DominantName/ExchangePointOfEarlyAndLate_0.2.txt" with lines title "ChangeOver"
+
+set xlabel "Change-over Point"
+set ylabel "Probability"
+set xrange[6:101]
+set term png
+set output "Plots/EarlyLate_ChangeOverPoint_0.3.png"
+plot "DominantName/ExchangePointOfEarlyAndLate_0.3.txt" with lines linewidth 3 title "ChangeOver"
+
+____________________________________
+
+set xlabel "End of window"
+set ylabel "Avg experience"
+set term pngcairo dashed
+set key left top
+set output "Plots/EarlyLate_AvgExpWindow.png"
+set xrange [0.i04:1.02]
+plot for [col=2:9:2] "DominantName/AvgExpWindow.txt"  using 1:col with lines linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title columnheader, for[col=2:9:2] "" using 1:col:col+1 with yerrorbars linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title ""
+
+reset
+set xlabel "End of window"
+set ylabel "Avg experience"
+set key left top
+set xrange [0.04:1.02]
+set term pngcairo dashed
+set output "Plots/EarlyLate_AvgAdoptExpWindow.png"
+plot for [col=2:9:2] "DominantName/AvgAdoptExpWindow.txt" using 1:col with lines linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title columnheader, for[col=2:9:2] "" using 1:col:col+1 with yerrorbars linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title ""
+
+
+
+reset
+set xlabel "Start of window"
+set ylabel "Avg experience derivitive"
+set key left top
+set term pngcairo dashed
+set output "Plots/EarlyLate_AvgExpWindow_derivitive.png"
+plot for [col=2:5] "DominantName/AvgExpWindow_derivitive.txt" using 1:col with lines linecolor ((col%2)*2+1) linewidth (((5-col)/2)*2 +1) linetype (col/2) title columnheader
+
+reset
+set xlabel "Start of window"
+set ylabel "Avg experience"
+set key left top
+set term pngcairo dashed
+set output "Plots/EarlyLate_AvgExpWindow_DiffToBase.png"
+plot for [col=2:5] "DominantName/AvgExpWindow_DiffFirst.txt" using 1:col with lines linecolor ((col%2)*2+1) linewidth (((5-col)/2)*2 +1) linetype (col/2) title columnheader
+
+
+
+
+clear
+reset
+unset key
+# Make the x axis labels easier to read.
+set xtics rotate out
+# Select histogram data
+set style data histogram
+# Give the bars a plain fill pattern, and draw a solid line around them.
+set style fill solid border
+set style histogram clustered
+set term png
+set xlabel "Start of window"
+set ylabel "Avg experience"
+set key top left outside horizontal autotitle columnhead
+set output "Plots/EarlyLate_AvgExpHistogram.png"
+plot for [COL=2:5] 'DominantName/AvgExpHistogram.txt' using COL:xticlabels(1) title columnheader(COL)
+
+
+_____________________________________________________________________________________________
+reset
+set xlabel "Experience Difference" font ", 16"
+set ylabel "Probability of Old Author Winning" font ", 16" offset -3,0,0
+set key right top
+set tics font ", 18"
+set format y '%2.0f%%' 
+set xrange [25:125]
+set yrange [20:73]
+set term pngcairo dashed
+set output "Plots/InvisibleFight_ProbOldWinning_VS_ExpDiff.png"
+plot "RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_ExpDiff.txt" using 1:4 with lines linecolor 3 linewidth 2 title "", "" using 1:4:5 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
+
+reset
+set xlabel "Experience Difference" font ", 16"
+set ylabel "Probability of Old Author Winning"  font ", 16"  offset -3,0,0
+set key right top
+set tics font ", 18"
+set format y '%2.0f%%' 
+set xrange [25:125]
+set yrange [20:73]
+set term pngcairo dashed
+set output "Plots/LowVisibleFight_ProbOldWinning_VS_ExpDiff.png"
+plot "PlotableData/LowVisibleFights_AgeDiff.txt" using 1:2 with lines linecolor 3 linewidth 2 title "", "" using 1:2:3 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
+
+reset
+set xlabel "Experience Difference" font ", 16"
+set ylabel "Probability of Old Author Winning" font ", 16" offset -3,0,0
+set key left top
+set xrange [3:38]
+set yrange [20:73]
+set tics font ", 18"
+set label font ", 40"
+set format y '%2.0f%%' 
+set term pngcairo dashed
+set output "Plots/VisibleFights_ExpDiff.png"
+plot "PlotableData/VisibleFights_AgeDiff.txt" using 1:2 with lines linecolor 3 linewidth 2 linetype 1 title "", "" using 1:2:3 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
+
+#####################################
+reset
+set xlabel "Global Experience"
+set ylabel "Percentage of Name Changed" offset -3,0,0
+set term pngcairo dashed
+set tics font ", 16"
+set label font ", 18"
+set format y '%2.0f%%'
+#set yrange [0:8]
+set output "Plots/GlobalExperience_Change_local>1.png"
+set key left top
+plot "PlotableData/GlobalExperience_ChangeFraction_local.txt" using 1:2 with lines linecolor 3 linewidth 2 title "", "" using 1:2:3 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
+
+reset
+set xlabel "Local Experience"
+set ylabel "Percentage of Name Changed" offset -3,0,0
+set term pngcairo dashed
+set tics font ", 16"
+set label font ", 18"
+set format y '%2.0f%%'
+set yrange [0:8]
+set output "Plots/LocalExperience_Change.png"
+set key right top
+plot "PlotableData/LocalExperience_ChangeFraction.txt" using 1:2 with lines linecolor 3 linewidth 2 title "", "" using 1:2:3 with yerrorbars linecolor 3 linewidth 1 linetype 2 title ""
+
+
+#######################################
+reset
+set xlabel "Macro Lifetime" font ", 16"
+set ylabel "Median of Percentage of Authors Using" font ", 16" offset -3,0,0
+set xrange[3:101]
+set tics font ", 16"
+set format y '%2.0f%%'
+set format x '%2.0f%%'
+set yrange [0:50]
+set xtics 0,20,100
+set ytics 0,10,55
+set term pngcairo dashed
+set output "Plots/EarlyLate_SlidingWindow_0.3.png"
+plot for [col=3:4] "DominantName/SlidingWindow_0.3.txt"  using 2:col with lines linewidth 3 linetype (col-2) title columnheader 
+
+reset
+set xlabel "Macro Lifetime" font ", 16"
+set ylabel "Percentage" font ", 16" offset -3,0,0
+set tics font ", 16"
+set format y '%2.1f%%'
+set format x '%2.0f%%'
+set xtics 0,20,100
+set xrange[6:101]
+set term pngcairo dashed
+set output "Plots/EarlyLate_ChangeOverPoint_0.3.png"
+plot "DominantName/ExchangePointOfEarlyAndLate_0.3.txt" with lines linewidth 3 title ""
+
+#########################################################33
+reset
+set xlabel "Macro Lifetime"
+set ylabel "Average Experience"
+set term pngcairo dashed enhanced
+set key left top
+set output "Plots/EarlyLate_AvgExpWindow.png"
+set format x '%2.0f%%'
+set xrange [4:102]
+set yrange [0:45]
+plot for [col=2:9:2] "DominantName/AvgExpWindow.txt"  using 1:col with lines linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title columnheader, for[col=2:9:2] "" using 1:col:col+1 with yerrorbars linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title ""
+
+reset
+set xlabel "Macro Lifetime"
+set ylabel "Average Experience"
+set key left top
+set xrange [4:102]
+set yrange [0:45]
+set format x '%2.0f%%'
+set term pngcairo dashed enhanced
+set output "Plots/EarlyLate_AvgAdoptExpWindow.png"
+plot for [col=2:9:2] "DominantName/AvgAdoptExpWindow.txt" using 1:col with lines linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title columnheader, for[col=2:9:2] "" using 1:col:col+1 with yerrorbars linecolor (((col/2+1)%2)*2+1) linewidth (((5-(col/2 +1))/2)*2 +1) linetype ((col/2 +1)/2) title ""
+
+################################
+reset
+set xlabel "k"
+set ylabel "Accuracy"
+set key left top
+set yrange [60:95]
+set format y '%2.0f%%'
+set term pngcairo dashed
+set output "Plots/MacroFitness.png"
+plot for [col=2:5] "PlotableData/MacroFitness.txt" using 1:col with lines linecolor (col-1) linewidth 2 linetype (col-1) title columnheader
+
+######################################
+reset
+set xlabel "Macro Lifetime" font ", 16"
+set ylabel "Percentage of Authors Using Macro Name" font ", 16" offset -3,0,0
+set xrange[3:101]
+set tics font ", 16"
+set format y '%2.0f%%'
+set format x '%2.0f%%'
+set yrange [0:100]
+set xtics 0,20,100
+set ytics 0,20,105
+set term pngcairo dashed
+set output "SendToJon/yfund.png"
+plot for [col=3:4] "SendToJon/Sliding_Window_10317_smoothened.txt"  using 2:col with lines linewidth 3 linetype (col-2) title columnheader 
+
+#########################
+reset
+set xlabel "Macro Lifetime"
+set ylabel "Percentage of Authors Using Macro Name" offset -3,0,0
+set xrange[3:101]
+set tics font ", 16"
+set format y '%2.0f%%'
+set format x '%2.0f%%'
+set yrange [0:100]
+set xtics 0,20,100
+set ytics 0,20,105
+set term pngcairo dashed
+set output "SendToJon/yfund.png"
+plot for [col=3:4] "SendToJon/Sliding_Window_10317_smoothened.txt"  using 2:col with lines linewidth 3 linetype (col-2) title columnheader 
 
 

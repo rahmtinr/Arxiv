@@ -6,7 +6,7 @@
 #include<set>
 #include"Macro.h"
 
-#define K_2K_DEF false 
+#define K_2K_DEF true
 #define SOLVE_DEF false
 #define AUTHOR_HEAPS_LAW_DEF false
 #define MACRO_HEAPS_LAW_DEF false

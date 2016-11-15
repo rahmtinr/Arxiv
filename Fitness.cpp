@@ -2,14 +2,14 @@
 using namespace std;
 
 #if K_2K_DEF
-ofstream fout_k_2k[10];
-ofstream fout_k_2k_thresholds(folder + "k_2k_thresholds.txt");
-vector<OutputElement> k_2k[10];
+ofstream fout_k_2k[20];
+ofstream fout_k_2k_thresholds;
+vector<OutputElement> k_2k[20];
 void prediction_k_2k(int x) {
     if(word_bucket[x].size() == 0) {
         return;
     }
-    if(folder == "RawOutput/Name" && !GoodMacro(word_bucket[x][0], macro_paper_count[x] - 10, rev_macro_to_num[x].length() - 10)) { // macro needs to be used and should have a length
+    if(folder == "RawOutput/Name/" && !GoodMacro(word_bucket[x][0], macro_paper_count[x] - 10, rev_macro_to_num[x].length() - 10)) { // macro needs to be used and should have a length
         return;
     }
 
@@ -18,24 +18,42 @@ void prediction_k_2k(int x) {
     set<int> local_unique_authors;
     map<int, int> author_count_to_index;
     map<int, int> author_count_to_median_index;
-    int threshold = 5;
-    for(int i = 0 ; i <(int) word_bucket[x].size(); i++) {
-        if(word_bucket[x][i].authors.size() > 20) {
-            // REMOVE THIS IF YOU WANT ALL THE DATA FOR THE PREDICTION <--------------------------------------
-            // Only macros that go over k without a paper with 20 authors
-            break;
-        }
-        for(int j = 0; j < (int)word_bucket[x][i].authors.size(); j++) {
-            local_unique_authors.insert(word_bucket[x][i].authors[j]);
-        }
-        while((int)local_unique_authors.size() >= threshold) {
-            author_count_to_index[threshold] = i + 1;
-            threshold++;
-        }
-    }
-    int index_bef = 0;
-    for(int out_counter = 1; out_counter < 10; out_counter++) {
-        int threshold =  5 * ( 1 << (out_counter - 1));
+	map<int, double> author_count_to_average_usage_exp;
+	map<int, double> author_count_to_average_adoption_exp;
+	{
+		int threshold = 5;
+		int sum_exp = 0;
+		int num_exp = 0;
+		int sum_adopt_exp = 0;
+		int num_adopt_exp = 0;
+		for(int i = 0 ; i <(int) word_bucket[x].size(); i++) {
+			if(word_bucket[x][i].authors.size() > 20) {
+				// REMOVE THIS IF YOU WANT ALL THE DATA FOR THE PREDICTION <--------------------------------------
+				// Only macros that go over k without a paper with 20 authors
+				break;
+			}
+			for(int j = 0; j < (int)word_bucket[x][i].authors.size(); j++) {
+				if(local_unique_authors.find(word_bucket[x][i].authors[j]) == local_unique_authors.end()) {
+					sum_adopt_exp += word_bucket[x][i].experience[j];
+				}
+				local_unique_authors.insert(word_bucket[x][i].authors[j]);
+				sum_exp += word_bucket[x][i].experience[j];
+				num_exp ++;
+
+			}
+			num_adopt_exp = local_unique_authors.size();
+			while((int)local_unique_authors.size() >= threshold) { // Finds the earliest time we hit threshold unique authors 
+				author_count_to_index[threshold] = i + 1;
+				author_count_to_average_usage_exp[threshold] = sum_exp / (double) num_exp;
+				author_count_to_average_adoption_exp[threshold] = sum_adopt_exp / (double) num_adopt_exp;
+				threshold++;
+			}
+		}
+	}
+	int index_bef = 0;
+	for(int out_counter = 0; out_counter < 20; out_counter++) {
+		//		int threshold =  5 * ( 1 << (out_counter - 1));
+		int threshold =  10 * (out_counter+1);
 
         if(author_count_to_index.find(threshold) == author_count_to_index.end()) {
             break;
@@ -101,10 +119,26 @@ void prediction_k_2k(int x) {
                 depth--;
             }
         }
+
+		Macro m0 = word_bucket[x][0];
+		Macro m1 = word_bucket[x][author_count_to_index[threshold] - 1];
+		int speed = (m1.year - m0.year) * 12 + (m1.month - m0.month);
+		
+		m1 = word_bucket[x][author_count_to_index[threshold/2] - 1];
+		int speed_half = (m1.year - m0.year) * 12 + (m1.month - m0.month);
+
+		double avg_using_exp = author_count_to_average_usage_exp[threshold];
+		double avg_adopt_exp = author_count_to_average_adoption_exp[threshold];
+		double avg_using_exp_half = author_count_to_average_usage_exp[threshold / 2];
+		double avg_adopt_exp_half = author_count_to_average_adoption_exp[threshold / 2];
+
         output_element.output_string = to_string(word_bucket[x][0].authors.size()) + ", " + to_string(index) + ", " + to_string(global[global.size() / 2]) + ", " + to_string(global_sum / global.size()) + ", ";
         output_element.output_string += to_string(local_global.first + eps) + ", " + to_string(local_global.second + eps) + ", ";
         output_element.output_string += to_string(rev_macro_to_num[x].length()) + ", " + to_string(special_characters) + ", " + to_string(unique_names.size()) + ", ";
         output_element.output_string += to_string(dollar_signs) + ", " + to_string(back_slashes) + ", " + to_string(max_depth) + ", ";
+		output_element.output_string += to_string(speed_half) + ", " + to_string(speed) + ", ";
+		output_element.output_string += to_string(avg_using_exp) + ", " + to_string(avg_using_exp_half) + ", ";
+		output_element.output_string += to_string(avg_adopt_exp) + ", " + to_string(avg_adopt_exp_half) + ", ";
         output_element.authors_count = local_author_count;
         k_2k[out_counter].push_back(output_element);
     }

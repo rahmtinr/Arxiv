@@ -41,6 +41,7 @@ string skipped_string = "";
 //ofstream feynman_fout("Feynman.txt");
 
 ofstream feynman_fout("RawOutput/Feynman_summary" + skipped_string + ".txt");
+//ofstream fout_frac_length("RawOutput/ONLYBIG-Biggest_component_MacroLength" + skipped_string + ".txt");
 ofstream fout_frac_length("RawOutput/Biggest_component_MacroLength" + skipped_string + ".txt");
 ofstream fout_biggest_second_biggest("RawOutput/Biggest_SecondBiggest" + skipped_string + ".txt");
 ofstream fout_heat_map("RawOutput/MacroLength_AllAuthors_Biggest" + skipped_string + ".txt");
@@ -465,7 +466,9 @@ bool solve(int x) {
     //    }
     //    feynman_fout << endl << "________________________________________" << endl;
 
-    fout_frac_length << rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << max_people / (double)all_people.size() << endl;
+//	if(word_bucket[x].size() > 100) { // TODO
+	    fout_frac_length << rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << max_people / (double)all_people.size() << endl;
+//	}
     fout_biggest_second_biggest << max_people / (double) all_people.size()  << " " << second_max_people/(double) all_people.size() << endl;
     fout_heat_map <<  rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << all_people.size() << " " << max_people/(double) all_people.size() << endl; 
 #endif
@@ -611,21 +614,31 @@ int main() {
     }
     cerr << "------> " << skipped << endl;
     sort(macros.begin(), macros.end());
-    for(int i = 0; i < (int) macros.size(); i++) {
-        for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
-            int author = macros[i].authors[j];
-            macros[i].experience.push_back(author_experience[author]);
-        }
-        if(i == 0 || !ExactSame(macros[i], macros[i - 1])) {
-            for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
-                int author = macros[i].authors[j];
-                author_experience[author]++;
-            }
-        }
-    }
-    cerr << macro_counter << " different macros used in  " << macros.size() << " comments" << endl;
-	cerr << "authors count:" << author_experience.size() << endl;
-
+	{
+		set<pair<int, string> > body_name;
+		int paper_count = 0;
+		int sum_authors_on_papers = 0;
+		for(int i = 0; i < (int) macros.size(); i++) {
+			body_name.insert(make_pair(macros[i].macro_number, macros[i].name));
+			for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
+				int author = macros[i].authors[j];
+				macros[i].experience.push_back(author_experience[author]);
+			}
+			if(i == 0 || !ExactSame(macros[i], macros[i - 1])) {
+				paper_count++;
+				sum_authors_on_papers += macros[i].authors.size();
+				for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
+					int author = macros[i].authors[j];
+					author_experience[author]++;
+				}
+			}
+		}
+		cout << macro_counter << " different macros used in  " << macros.size() << " comments" << endl;
+		cout << "authors count: " << author_experience.size() << endl;
+		cout << "paper count: "	 << paper_count << endl;
+		cout << "Avg authors per paper: " << sum_authors_on_papers / (double) paper_count << endl;
+		cout << "Avg diff name for one body:  " << body_name.size() / (double) macro_counter << endl;
+	}
     for(int i = 0; i < (int)macros.size(); i++) {
         word_bucket[macros[i].macro_number].push_back(macros[i]);
     }

@@ -107,9 +107,9 @@ void Read(string filename) {
                 getline(fin, s);
                 continue;
             }
-            if(macro.authors.size() < 50 && temp != "") {
-                macros.push_back(macro);
-            }
+        }
+		if(macro.authors.size() > 0 && macro.authors.size() < 50 && temp != "") {
+            macros.push_back(macro);
         }
         getline(fin, s); // you have two empty lines
     }

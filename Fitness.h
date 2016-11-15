@@ -7,7 +7,7 @@
 #include<iostream>
 
 #if K_2K_DEF
-extern ofstream fout_k_2k[10];
+extern ofstream fout_k_2k[20];
 extern ofstream fout_k_2k_thresholds;
 void prediction_k_2k(int);
 struct OutputElement {
@@ -17,7 +17,7 @@ struct OutputElement {
         return authors_count < other.authors_count;
     }
 };
-extern vector<OutputElement> k_2k[10];
+extern vector<OutputElement> k_2k[20];
 #endif 
 
 #if LONGEVITY_DEF

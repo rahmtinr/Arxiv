@@ -22,7 +22,18 @@ cp RawOutput/Biggest_SecondBiggest.txt PlotableData/
 cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1 && $2 > 100) a[$4]+=$5; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_ChangeFraction-FinalLocalLarger100.txt
 cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1 && $2 > 100) a[$4]+=$6; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_NewExperience-FinalLocalLarger100.txt
 cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$4]+=$5; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_ChangeFraction.txt
-cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$4]+=$6; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_NewExperience.txt
+#cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$4]+=$6; b[$4]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/LocalExperience_NewExperience.txt
+cat RawOutput/Experience_changed_name.txt | awk -v bucket=5 '{if(NR>1){ x=$4; if(x>=10){x=int(x/bucket)*bucket;} else{ x=int((x+1)/2);} a[x]+=$5; b[x]++}} END {for(i in a) { p = a[i]/b[i]; if(int(i) <  180 && int(i)>0) print i, p, sqrt(p*(1-p))/sqrt(b[i])}}' | sort -n >PlotableData/LocalExperience_ChangeFraction.txt
+
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1 && $2 > 100) a[$3]+=$5; b[$3]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/GlobalExperience_ChangeFraction-FinalLocalLarger100.txt
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1 && $2 > 100) a[$3]+=$6; b[$3]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/GlobalExperience_NewExperience-FinalLocalLarger100.txt
+#cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$3]+=$5; b[$3]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/GlobalExperience_ChangeFraction.txt
+cat RawOutput/Experience_changed_name.txt | awk -v bucket=5 '{if(NR>1){ x=$3; if(x>=10){x=int(x/bucket)*bucket;} else{ x=int((x+1)/2);} a[x]+=$5; b[x]++}} END {for(i in a) { p = a[i]/b[i]; if(int(i) <  180 && int(i)>0) print i, p, sqrt(p*(1-p))/sqrt(b[i])}}' | sort -n >PlotableData/GlobalExperience_ChangeFraction.txt
+cat RawOutput/Experience_changed_name.txt | awk -v bucket=5 '{if(NR>1 && $4>1){ x=$3; if(x>=10){x=int(x/bucket)*bucket;} else{ x=int((x+1)/2);} a[x]+=$5; b[x]++}} END {for(i in a) { p = a[i]/b[i]; if(int(i) <  180 && int(i)>0) print i, p, sqrt(p*(1-p))/sqrt(b[i])}}' | sort -n >PlotableData/GlobalExperience_ChangeFraction_local.txt
+
+
+cat RawOutput/Experience_changed_name.txt | awk '{if(NR>1) a[$3]+=$6; b[$3]++} END {for(i in a) { print i, a[i]/b[i]}}' | sort -n >PlotableData/GlobalExperience_NewExperience.txt
+
 
 
 cat RawOutput/heaps_law.txt | awk '{if(NR> 1) {a[$1]+=$3; b[$1]++;}}END{for(i in a) { print i, a[i]/b[i]}}' | sort -n > PlotableData/FinalLocalExperience_AverageTokens.txt
@@ -32,13 +43,26 @@ cat RawOutput/heaps_law.txt | awk '{if(NR> 1) {a[$1]+=$2; b[$1]++;}}END{for(i in
 # Colorful plot with local thresholds
 cat RawOutput/Experience_changed_name.txt  | awk 'BEGIN{printf "LocalExperience "; for(j = 0; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=0; j <=130; j+=10) { if(NR>1 && $2 >= j){a[$4][j]+=$5;} b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=0; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j]} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction-All.txt
 
+################################################
 # Colorful plot with Global thresholds
-cat RawOutput/Experience_changed_name.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All.txt
+#All-wide
+cat RawOutput/Experience_changed_name-wide.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-wide.txt
+
+#All-narrow
+cat RawOutput/Experience_changed_name-narrow.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-narrow.txt
+#All - All
+cat RawOutput/Experience_changed_name.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-All.txt
 
 
 # Colorful plot with Global thresholds - Early life threshold
-cat RawOutput/Experience_changed_name.txt | awk -v EarlyLifeThreshold=40 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j && $3 < EarlyLifeThreshold) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-EarlyLife.txt
+#EarlyLife - All
+cat RawOutput/Experience_changed_name.txt | awk -v EarlyLifeThreshold=40 'BEGIN{printf "LocalExperience "; for(j = EarlyLifeThreshold; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=EarlylifeThreshold; j <=130; j+=10) {if(NR>1 && $1 >= j && $3 < EarlyLifeThreshold) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=EarlyLifeThreshold; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-All.txt
 
+#EarlyLife - narrow
+cat RawOutput/Experience_changed_name-narrow.txt | awk -v EarlyLifeThreshold=40 'BEGIN{printf "LocalExperience "; for(j = EarlyLifeThreshold; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=EarlylifeThreshold; j <=130; j+=10) {if(NR>1 && $1 >= j && $3 < EarlyLifeThreshold) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=EarlyLifeThreshold; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-narrow.txt
+
+#EarlyLife - wide
+cat RawOutput/Experience_changed_name-wide.txt | awk -v EarlyLifeThreshold=40 'BEGIN{printf "LocalExperience "; for(j = EarlyLifeThreshold; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=EarlylifeThreshold; j <=130; j+=10) {if(NR>1 && $1 >= j && $3 < EarlyLifeThreshold) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=EarlyLifeThreshold; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-wide.txt
 
 cat RawOutput/heaps_law.txt | awk '{if(NR == 1) { print "FinalLocalExp UnchangedPeople UnchangedFraction" } else { if($2 == 1) { a[$1]++ } b[$1]++ }} END {for(i in a) { print i, a[i], a[i]/b[i] }}' | sort -n > PlotableData/FinalLocalExperience_UnchangedNames.txt
 
@@ -55,14 +79,14 @@ cat RawOutput/2_to_1_samples_nosmart.txt | awk '{if($2==$3){label=1;a[$5]++}else
 cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPair_nosmart.txt | awk -F ', ' 'BEGIN{print "YoungerExperience OlderExperience winner"}{if(NR>1){ temp1=$1; temp2=$11; winner=$22; total++; if($1>$11){ temp1=$11; temp2=$1; winner = 3-$22; count++} print temp1, temp2, winner}}' > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt
 
 # Create the probability of younger winning given older-younger
-bucket=10;cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk -v bucket=$bucket 'BEGIN{print "Difference FractionOlderWin Instances"}{if(NR>1) {total[int(($2-$1)/bucket)]++; if($3 == 2) OlderWin[int(($2-$1)/bucket)]++;}}END{for(i in total) print i * bucket, OlderWin[i]/total[i], total[i]}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_AgeDifference.txt
+bucket=30; cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPair_nosmart.txt | awk -F ',' '{ if(NR> 1) print $1, $13, $29}' | sed 's/  / /g' | awk -v bucket=$bucket '{ x= int(($2-$1)/bucket); if(x < 0) { x = -x} if($1>$2 && $3==1 || $1<$2 && $3==2) { num[x]++} denom[x]++; if(x in num == 0) num[x] =0 }END{for(x in denom){if(int(x)<10) {p=num[x]/denom[x]; print x*bucket, num[x],denom[x], num[x]/denom[x], p*(1-p)/sqrt(denom[x]) }}}' > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_ExpDiff.txt 
 
+#older - younger addaptive bucketing
+cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPair_nosmart.txt | awk -F ',' '{ if(NR> 1 && $1!=$13) print $1, $13, $29}' | sed 's/  / /g' | awk -v bucket=$bucket '{ x= int($2-$1); if(x < 0) { x = -x} if($1>$2 && $3==1 || $1<$2 && $3==2) { num[x]++} denom[x]++; if(x in num == 0) num[x] =0 }END{for(x in denom){print x, num[x],denom[x]}}' | sort -n | awk 'BEGIN{bef=1;num=0}{denom+=$3; num+=$2; if(denom>130) {p = num/denom; print bef,num/denom, p*(1-p)/sqrt(denom); num =0; denom =0; bef=$1+1 }}END{p=num/denom; print bef,num/denom, p*(1-p)/sqrt(denom)}'  > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_ExpDiff_AdaptiveBucketing.txt
 
 
 # Create the probability of older winning given his experience
-
-bucket=10; cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk -v bucket=$bucket 'BEGIN{print "OlderAge FractionOlderWins Instaces"}{if(NR>1){ total[int($2/bucket)]++; if($3 == 2) OlderWin[int($2/bucket)]++;}}END{for(i in total) print i * bucket, OlderWin[i]/total[i], total[i]}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_OlderExperience.txt
-
+bucket=10; cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPair_nosmart.txt | awk -F',' '{ if(NR> 1) print $1, $13, $29}' | sed 's/  / /g' | awk -v bucket=$bucket '{x=$2; if($1>$2){ $2=$1; $1=x; $3=3-$3} x=int(x/bucket); if($3==2) { num[x]++} denom[x]++; if(x in num == 0) num[x]=0 }END{for(x in denom){if(int(x)<10){ p = num[x]/denom[x]; print x*bucket, num[x],denom[x], num[x]/denom[x], p*(1-p)/sqrt(denom[x])}}}' | sort -n  > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_probability_of_older_winning_on_OlderExperience.txt 
 
 # create heat map on probability of winning ($2 is older) so he is the x-axis(below the diagonal)
 cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk 'BEGIN{print "x y heat"}{if(NR>1){total[$2][$1]++; if($3 == 2) OlderWin[$2][$1]++;}}END{for(x=1; x < 40; x++) { for(y=0; y<40; y++) {if(total[x][y]==0) {print x, y, 0;} else {print x, y, OlderWin[x][y]/total[x][y]}}}}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_heatmap.txt

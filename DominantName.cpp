@@ -14,15 +14,16 @@
 
 using namespace std;
 
-map<int, vector<string>> body_names;
+map<int, vector<int>> body_names;
 
-ofstream fout_similar_but_far_names("DominantName/SimilarButFarNames.txt");
+ofstream fout_name_evolution;
+double RATIO;
 
-bool solve(const pair<int, vector<string> > p) { // used at least a hundred times, has at least 4 names
+bool solve(const pair<int, vector<int> > p) { // used at least a hundred times, has at least 4 names
 	string body = rev_macro_to_num[p.first];
-	vector<string> names = p.second;
+	vector<int> indecies = p.second;
 	
-	if(names.size() < 100) {
+	if(indecies.size() < 100) {
 		return false;
 	}
 
@@ -32,7 +33,8 @@ bool solve(const pair<int, vector<string> > p) { // used at least a hundred time
 	map<int, string> rev_normalized;
 	{
 		set<string> temp;
-		for(string x : names) {
+		for(int index : indecies) {
+			string x = macros[index].name;
 			if(temp.find(x) == temp.end()) {
 				normalized[x] = counter;
 				rev_normalized[counter] = x;
@@ -53,19 +55,19 @@ bool solve(const pair<int, vector<string> > p) { // used at least a hundred time
 		}
 	}
 	{
-		double frac = 0.3;
-		int bound = names.size() * frac;
+		double frac = RATIO;
+		int bound = indecies.size() * frac;
 		for (int i = 0; i < bound; i++) {
-			int index2 = normalized[names[i]];
+			int index2 = normalized[macros[indecies[i]].name];
 			f[0][index2] += 1.0 / bound;
 		}
 	}
 	{
-		double frac = 0.7;
-		int bound = names.size() * frac;
-		for (int i = names.size() - 1; i >= bound; i--) {
-			int index2 = normalized[names[i]];
-			f[1][index2] += 1.0 / (names.size() - bound);
+		double frac = 1 - RATIO;
+		int bound = indecies.size() * frac;
+		for (int i = indecies.size() - 1; i >= bound; i--) {
+			int index2 = normalized[macros[indecies[i]].name];
+			f[1][index2] += 1.0 / (indecies.size() - bound);
 		}
 	}
 	bool print = false;
@@ -82,23 +84,26 @@ bool solve(const pair<int, vector<string> > p) { // used at least a hundred time
 		return false;
 	}
 	
-	cerr << body << " " << names.size() << " " << f[1][max_index] << " " << rev_normalized[max_index] << endl;
-	cout << body << " " << names.size()  << endl;
+	cerr << body << " " << indecies.size() << " " << f[1][max_index] << " " << rev_normalized[max_index] << endl;
+	fout_name_evolution << body << " " << indecies.size()  << endl;
 	for(int j = 0; j < different_names; j++) {
-		cout << rev_normalized[j] << " , ";
+		fout_name_evolution << rev_normalized[j] << " , ";
 	}
-	cout << endl;
+	fout_name_evolution << endl;
 	for(int i = 0; i < 2; i++) {
 		for(int j = 0; j < different_names; j++) {
-			cout << f[i][j] << " , "; 
+			fout_name_evolution << f[i][j] << " , "; 
 		}
-		cout << endl;
+		fout_name_evolution << endl;
 	}
-	cout << endl;
+	fout_name_evolution << endl;
 	return true;
 }
 
-int main() {
+int main(int argc, char **argv) {
+	RATIO = stod(argv[1]);
+	fout_name_evolution.open("DominantName/NameEvolution_" + to_string(RATIO).substr(0,3) + ".txt");
+	cerr << "RATIO: " << RATIO << endl;
 	folder = "RawOutput/Name/";
     if(SMART != "_smart" && SMART != "_nosmart") {
         cerr << " THERE IS A PROBLEM WITH THE SMART const variable" << endl;
@@ -132,7 +137,7 @@ int main() {
             }
         }
 		if(body_names.find(macros[i].macro_number) == body_names.end()) {
-			vector<string> temp;
+			vector<int> temp;
 			body_names.insert(make_pair(macros[i].macro_number, temp));
 		}
 		string body = rev_macro_to_num[macros[i].macro_number];
@@ -140,8 +145,8 @@ int main() {
 			continue;
 		}
 		if(important_macros.find(rev_macro_to_num[macros[i].macro_number]) != important_macros.end()) {
-			vector<string> temp = body_names[macros[i].macro_number];
-			temp.push_back(macros[i].name);
+			vector<int> temp = body_names[macros[i].macro_number];
+			temp.push_back(i);
 			body_names.erase(macros[i].macro_number);
 			body_names.insert(make_pair(macros[i].macro_number, temp));
 		}
@@ -149,16 +154,9 @@ int main() {
 
     cerr << " $$$$$ " << endl;
 	
-//	int blah = 0;
-	for(pair<int, vector<string> > p : body_names) {
+	for(pair<int, vector<int> > p : body_names) {
 		cerr << " -----> " << p.first << endl;
 		solve(p);
-/*
-		blah++;
-		if(blah == 10) {
-			break;
-		}
-*/
 	}
     return 0;
 } 

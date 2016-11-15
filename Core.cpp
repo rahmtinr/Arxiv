@@ -18,7 +18,7 @@ ofstream fout_learning_unique_paper;
 ofstream fout_learning_unique_authorPair;
 ofstream fout_N_becomes_1;
 
-const std::string TYPE = "";
+const std::string TYPE = "-narrow";
 const std::string SMART = "_nosmart"; // options are _nosmart or _smart
 const bool has_skipped = false;
 const int H = 1000 * 1000;
@@ -49,8 +49,8 @@ int macro_counter = 1;
 
 
 bool GoodMacro(Macro macro, int count, int len) {
-    if(count < MACRO_PAPER_USAGE_FILTER || (len < MACRO_LENGTH_FILTER && folder == "/RawOutput/Name") ||
-			(len > 50 && folder == "/RawOutput/Body") ) { // macro needs to be used and should have a length
+    if(count < MACRO_PAPER_USAGE_FILTER || (len < MACRO_LENGTH_FILTER && folder == "/RawOutput/Name/") ||
+			(len > 50 && folder == "/RawOutput/Body/") ) { // macro needs to be used and should have a length
         return false;
     }
     return true;

@@ -6,9 +6,28 @@ void HeapsLawForAMacro(int x) { // Heaps law and name change
     }
     if(!GoodMacro(word_bucket[x][0], word_bucket[x].size(), rev_macro_to_num[x].length())) { // macro needs to be used and should have a length
         return;
-    }
-    int local_author_count = 1;
-    initialize(local_author_count, x);
+	}
+	int local_author_count = 1;
+	initialize(local_author_count, x);
+	cerr << x << " " << local_author_count << " ---- " << word_bucket[x].size() << endl;
+	if(TYPE == "") {
+		if(local_author_count < 20) {
+			return;
+		}
+	} else if( TYPE == "-narrow") {
+		if (local_author_count > 250 || local_author_count < 20) {
+			return;
+		}
+	} else if( TYPE == "-wide" ) {
+		if(local_author_count < 250) {
+			return;
+		}
+	} else {
+		cerr << "Problem with the arguments" << endl;
+		return;
+	}
+
+
     for(int i = 1 ; i < local_author_count; i++) {
         vector<string> names;
         set<string> names_set;
