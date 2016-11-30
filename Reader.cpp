@@ -77,6 +77,7 @@ void Read(string filename) {
             ss >> macro.day >> macro.month >> macro.year;
         }
         {
+			/*
             string t;
             getline(fin, s);
             stringstream ss(s);
@@ -85,6 +86,7 @@ void Read(string filename) {
             while(ss >> s) {
                 macro.categories.push_back(s);
             }
+			*/
         }
         {
             while(getline(fin, s)) {

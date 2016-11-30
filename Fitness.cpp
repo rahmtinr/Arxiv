@@ -9,7 +9,7 @@ void prediction_k_2k(int x) {
     if(word_bucket[x].size() == 0) {
         return;
     }
-    if(folder == "RawOutput/Name/" && !GoodMacro(word_bucket[x][0], macro_paper_count[x] - 10, rev_macro_to_num[x].length() - 10)) { // macro needs to be used and should have a length
+    if(folder == "RawOutput/Name/" && !GoodMacro(word_bucket[x][0], macro_paper_count[x], rev_macro_to_num[x].length())) { // macro needs to be used and should have a length
         return;
     }
 
@@ -39,20 +39,18 @@ void prediction_k_2k(int x) {
 				local_unique_authors.insert(word_bucket[x][i].authors[j]);
 				sum_exp += word_bucket[x][i].experience[j];
 				num_exp ++;
-
 			}
 			num_adopt_exp = local_unique_authors.size();
 			while((int)local_unique_authors.size() >= threshold) { // Finds the earliest time we hit threshold unique authors 
 				author_count_to_index[threshold] = i + 1;
 				author_count_to_average_usage_exp[threshold] = sum_exp / (double) num_exp;
 				author_count_to_average_adoption_exp[threshold] = sum_adopt_exp / (double) num_adopt_exp;
-				threshold++;
+				threshold += 5;
 			}
 		}
 	}
 	int index_bef = 0;
 	for(int out_counter = 0; out_counter < 20; out_counter++) {
-		//		int threshold =  5 * ( 1 << (out_counter - 1));
 		int threshold =  10 * (out_counter+1);
 
         if(author_count_to_index.find(threshold) == author_count_to_index.end()) {
@@ -76,6 +74,9 @@ void prediction_k_2k(int x) {
                 }
             }
         }
+		
+		
+		/*
         int max_author = - 1;
         for(int i = index_bef; i < index; i++) { // creating graph for clustering coeffs
             for(int author1 : word_bucket[x][i].authors) {
@@ -89,9 +90,10 @@ void prediction_k_2k(int x) {
                 }
             }
         }
-
         index_bef = index;
         pair<double, double> local_global = ClusteringCoeff(max_author + 1);
+		*/
+		pair<double, double> local_global = make_pair(0, 0);
         sort(global.begin(), global.end());
         sort(local.begin(), local.end());
         OutputElement output_element;
@@ -102,7 +104,7 @@ void prediction_k_2k(int x) {
         int depth = 0, max_depth = 0;
         string macro_body = rev_macro_to_num[x];
         for(int i = 0; i < (int)macro_body.length(); i++) {
-            if(macro_body[i] == '{' || macro_body[i] =='#') {
+            if(macro_body[i] == '{' || macro_body[i] == '#') {
                 special_characters++;
             }
             if(macro_body[i] == '$') {
@@ -123,7 +125,6 @@ void prediction_k_2k(int x) {
 		Macro m0 = word_bucket[x][0];
 		Macro m1 = word_bucket[x][author_count_to_index[threshold] - 1];
 		int speed = (m1.year - m0.year) * 12 + (m1.month - m0.month);
-		
 		m1 = word_bucket[x][author_count_to_index[threshold/2] - 1];
 		int speed_half = (m1.year - m0.year) * 12 + (m1.month - m0.month);
 

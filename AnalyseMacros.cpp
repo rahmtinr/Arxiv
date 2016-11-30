@@ -6,6 +6,13 @@
 #include<sstream>
 #include<vector>
 #include<algorithm>
+
+
+#define JACCARD false
+#define NAME_PRINTER false
+#define ONION_SHAPE_TREE false
+#define VOLUME true
+
 using namespace std;
 
 const int Macro_length_filter = 20;
@@ -32,7 +39,6 @@ vector<int> width[15][15];
 vector<int> paper_depth_count[15][15];
 set<int> local_paper_depth_set;
 
-
 vector<int> interesting_macros;
 
 bool has_skipped = false;
@@ -50,10 +56,10 @@ ofstream fout_exp_difference("RawOutput/AllExpDifference" + skipped_string + ".t
 ofstream fout_max_path("RawOutput/MaxPath" + skipped_string + ".txt");
 ofstream fout_jaccard("RawOutput/Jaccard" + skipped_string + ".txt");
 ofstream fout_name_change("RawOutput/NameChange" + skipped_string + ".txt");
+ofstream fout_good_samples("RawOutput/GoodSamples" + skipped_string + ".txt");
 ofstream fout_width[15];
 // ofstream fout_one_significant("RawOutput/OnlyOneSignificantRoot" + skipped_string + ".txt");
-
-
+ofstream fout_large_tree_macros("RawOutput/MacroTrees/LargeTreeMacros.txt");
 
 void StrongDfs(int x) {
     local_mark[x] = 1;
@@ -125,7 +131,7 @@ int BFS(int x) {
         memset(local_width, 0, sizeof local_width);
         local_paper_depth_set.clear();
         for(int i = 0; i < head; i++) {
-            local_width[Q[i].second] ++;
+            local_width[Q[i].second]++;
             local_paper_depth_set.insert(local_earliest_index[Q[i].first]);
             if(i == head - 1 || Q[i].second != Q[i + 1].second) {
                 paper_depth_count[depth][Q[i].second].push_back(local_paper_depth_set.size());
@@ -168,7 +174,7 @@ struct Macro {
     vector<string> categories;
     int day, month, year;
     int count;
-
+	map<pair<int, int>, int> co_authorship;
     bool operator < (const Macro &other) const {
         if(year == other.year) {
             if(month == other.month) {
@@ -201,7 +207,8 @@ struct Macro {
     string ToString() {
         string ret ="";
         ret += (rev_macro_to_num[macro_number] + " " + SimpleIntToString(day) + "/" + SimpleIntToString(month) + "/" + SimpleIntToString(year) + "\n");
-        for(int i = 0; i < (int)authors.size(); i++) {
+        ret += (paper_id + "\n");
+		for(int i = 0; i < (int)authors.size(); i++) {
             ret += rev_author_to_num[authors[i]];
             if(i < (int)authors.size() - 1){
                 ret += ", ";
@@ -239,6 +246,18 @@ vector<Macro> word_bucket[3 * 1000 * 1000];
 map<int, int> author_experience; // at the end of the code it will be final experience but while running it's the current_exp
 int num_above_cut = 0;
 
+bool MacroHasBigComponent(int x) {
+	if(rev_macro_to_num[x] == "\\mathrel{\\raise0.35ex\\hbox{$\\scriptstyle >$}\\kern-0.6em\\lower0.40ex\\hbox{{$\\scriptstyle \\sim$}}}" ||
+			rev_macro_to_num[x] == "\\mathrel{\\raise0.35ex\\hbox{$\\scriptstyle <$}\\kern-0.6em\\lower0.40ex\\hbox{{$\\scriptstyle \\sim$}}}" || 
+			rev_macro_to_num[x] == "\\hbox{$\\ph\\cm^{-2}\\s^{-1}\\,$}" || 
+			rev_macro_to_num[x] == "\\hbox{$\\erg\\cm^{-2}\\s^{-1}\\,$}" || 
+			rev_macro_to_num[x] == "{\\rm\\thinspace gauss}" || 
+			rev_macro_to_num[x] == "\\hbox{$\\Msun\\pc^{-3}\\,$}") {
+		return true;
+	}
+	return false;
+}
+
 bool solve(int x) {
 	cerr << x << endl;
     if(word_bucket[x].size() < Macro_paper_usage || rev_macro_to_num[word_bucket[x][0].macro_number].length() < Macro_length_filter) { // macro needs to be used and should have a length
@@ -266,10 +285,8 @@ bool solve(int x) {
     fill(rev_comp.begin(), rev_comp.end(), 0); 
 
     cerr << "BUILDING GRAPH " << endl;
-    for(int i = 0; i < (int)word_bucket[x].size(); i++) {
-        cerr << i << " ----------- " << word_bucket[x].size()  << endl;
+    for(int i = 0; i < (int) word_bucket[x].size(); i++) {
         for(int author : word_bucket[x][i].authors) {
-            cerr << rev_author_to_num[author] << endl;
             if(local_author_id.find(author) == local_author_id.end()){
                 rev_local_author_id[local_counter] = author;
                 local_author_id[author] = local_counter++;
@@ -291,7 +308,7 @@ bool solve(int x) {
                 int exp_first = word_bucket[x][i].experience[j];
                 int exp_second = word_bucket[x][i].experience[k];
                 if(local_earliest[first] <= local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
-                    graph[first].push_back(second);
+					graph[first].push_back(second);
                     rev_graph[second].push_back(first);
                 }
                 if(local_earliest[first] < local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
@@ -300,7 +317,6 @@ bool solve(int x) {
             }
         }
     }
-    cerr << "Number of authors: " << local_counter << endl;
 #if 1
     //    cerr << "STARTED SCC" << endl;
     // strongly connected component
@@ -309,7 +325,6 @@ bool solve(int x) {
             StrongDfs(i);
         }
     }
-    cerr << "FINISHING TIME IS DONE" << endl;
     fill(local_mark.begin(), local_mark.end(), 0);
     int comp_num = 1;
     set<int> comps_to_check;
@@ -445,7 +460,8 @@ bool solve(int x) {
         }
         fout_stats << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
         if(max_path1 > 4) {
-            interesting_macros.push_back(x);
+			interesting_macros.push_back(x);
+			fout_large_tree_macros << rev_macro_to_num[x] << endl;
         }
     }
 
@@ -471,6 +487,14 @@ bool solve(int x) {
 //	}
     fout_biggest_second_biggest << max_people / (double) all_people.size()  << " " << second_max_people/(double) all_people.size() << endl;
     fout_heat_map <<  rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << all_people.size() << " " << max_people/(double) all_people.size() << endl; 
+	if(MacroHasBigComponent(x) == true) {
+		for(int l = 0; l < (int)word_bucket[x].size(); l++) {
+			fout_good_samples << l << endl;
+			fout_good_samples << word_bucket[x][l].name << endl;
+			fout_good_samples << word_bucket[x][l].ToString() << endl;
+		}
+		fout_good_samples << "_____________________________________________________________" << endl;
+	}
 #endif
     return true;
 }
@@ -498,13 +522,82 @@ double Jaccard(int x, int y) {
     return ((double) intersect_authors.size()) / all_authors.size();
 }
 
+const int Max_N = 20000 + 10;
+vector<int> bip_graph[Max_N];
+int match[Max_N], mark[Max_N];
+
+bool dfs(int x) {
+	mark[x] = 1;
+	for(int y : bip_graph[x]) {
+		if(match[y] == 0) {
+			match[y] = x;
+			return true;
+		}
+		if(mark[match[y]] == 1) {
+			continue;
+		}
+		if(dfs(match[y]) == true) {
+			match[y] = x;
+			return true;
+		}
+	}
+	return false;
+}
+
+
+int BipartiteMatching(int x, int y) {
+	map<int, int> author_to_local_id, rev_author_to_local_id;
+	int author_count = 1;
+	memset(mark, 0, sizeof mark);
+	memset(match, 0, sizeof match);
+	for(Macro macro : word_bucket[x]) {
+		for(int author : macro.authors) {
+			if(author_to_local_id.find(author) == author_to_local_id.end()) {
+				author_to_local_id[author] = author_count;
+				rev_author_to_local_id[author_count] = author;
+				author_count++;
+			}
+		}
+	}
+	int paper_count = 1;
+	int volume = 0;
+	for(Macro macro : word_bucket[x]) {
+		for(int author : macro.authors) { // add edges for the new paper
+			bip_graph[paper_count].push_back(author_to_local_id[author]);	
+		}
+		if(dfs(paper_count) == true) {
+			memset(mark, 0, 4 * paper_count + 8);
+			volume++;
+			if(volume == y) {
+				break;
+			}
+		}
+		paper_count++;
+	}
+	for(int i = 0; i < paper_count; i++) {
+		bip_graph[i].clear();
+	}
+	if(y == 0) {
+		return volume;
+	} else {
+		for(int i = 1; i < author_count; i++) {
+			if(match[i] == 0){
+				continue;
+			}
+			//cerr << rev_author_to_num[rev_author_to_local_id[i]] << " ----- " << word_bucket[x][match[i] - 1].paper_id << endl;
+		}
+		return paper_count;	
+	}
+}
+
 int main() {
     ifstream fin("All_Arxiv_Macros.txt");
     int macro_counter = 1;
     int author_counter = 1;
     string s, temp;
     int skipped = 0;
-    while(getline(fin, s)) {
+
+	while(getline(fin, s)) {
         Macro macro;
         {
             stringstream ss(s);
@@ -575,6 +668,7 @@ int main() {
             ss >> macro.day >> macro.month >> macro.year; 
         }
         {
+			/*
             string t;
             getline(fin, s);
             stringstream ss(s);
@@ -583,7 +677,7 @@ int main() {
             while(ss >> s) {
                 macro.categories.push_back(s);   
             }
-
+			*/
         }
         {
             while(getline(fin, s)) {
@@ -607,7 +701,7 @@ int main() {
                 continue;
             }
             if(macro.authors.size() < 50 && macro.authors.size() > 0 && temp != "") { 
-                macros.push_back(macro); 
+				macros.push_back(macro); 
             }
         }
         getline(fin, s); // you have two empty lines
@@ -631,6 +725,13 @@ int main() {
 					int author = macros[i].authors[j];
 					author_experience[author]++;
 				}
+				for(int author1 : macros[i].authors) {
+					for(int author2 : macros[i].authors) {
+						if(author1 >= author2) {
+							continue;
+						}
+					}
+				}
 			}
 		}
 		cout << macro_counter << " different macros used in  " << macros.size() << " comments" << endl;
@@ -649,6 +750,9 @@ int main() {
     }
     cerr << "num above cut: " <<  num_above_cut << endl;
     cerr << "macros with max_path larger than threshold: " << interesting_macros.size() << endl;
+
+#if JACCARD	
+// Find the jaccard score over authors of two macros! If two macros have high jaccard score then they have similar authors
     { // Jaccard scores
         vector<pair<double, pair<int, int>> > jaccard_scores;
         for(int macro1 : interesting_macros) {
@@ -666,8 +770,9 @@ int main() {
             fout_jaccard << temp.first << " " << rev_macro_to_num[x1] << " ---- " << rev_macro_to_num[x2] << endl;
         }
     }
-
-    { // max path components
+#endif
+#if NAME_PRINTER
+    { // This piece of code prints the different names used for a body
         set<string> names;
         for(int x : interesting_macros) {
             fout_name_change << rev_macro_to_num[x] << " ::::::::::::::::: "; 
@@ -681,6 +786,8 @@ int main() {
             names.clear();
         }
     }
+#endif
+#if ONION_SHAPE_TREES
     { // Width (number of authors) and number of papers for each level
         for(int i = 5; i < 13; i++) {
             fout_width[i].open("RawOutput/Width" + to_string(i) + skipped_string + ".txt");
@@ -691,11 +798,43 @@ int main() {
                 sort(width[i][j].begin(), width[i][j].end());
                 sort(paper_depth_count[i][j].begin(), paper_depth_count[i][j].end());
                 fout_width[i] << j << " " << width[i][j][width[i][j].size() / 2] << " " << paper_depth_count[i][j][paper_depth_count[i][j].size() / 2] << endl;
+				// each paper will give you an SCC which is the paper_depth_count, but each paper can have several authors! width is the author count of that particular depth
             }
             fout_width[i].close();
         }
     }
+#endif
 
-    return 0;
+#if VOLUME
+	vector<pair<int, int> > volumes; // volume, macro_number
+	for(int x : interesting_macros) {
+		cerr << " started matching for x " << endl;
+		int volume = BipartiteMatching(x, 0);
+		volumes.push_back(make_pair(volume, x));
+	}
+	sort(volumes.begin(), volumes.end());
+	cout << "vol size: " << volumes.size() << endl;
+	int index_small = volumes.size() * 3 / 6;
+	cout << "3/6 threshold: " << volumes[index_small].first << " " << volumes[index_small].second << endl;
+	int index_big = volumes.size() * 4 / 6;
+	cout << "4/6 threshold: " << volumes[index_big].first << " " << volumes[index_big].second << endl;
+	fill(local_earliest.begin(), local_earliest.end(), 0);
+	fill(local_earliest_index.begin(), local_earliest_index.end(), 0);
+	local_author_id.clear();
+	fill(rev_local_author_id.begin(), rev_local_author_id.end(), 0);
+
+	ofstream fout_volumes("RawOutput/BipartiteThresholds.txt");
+	fout_volumes << "FinalVolume BreakIndex Label MacroBody" << endl;
+	for(int i = volumes.size() / 6; i <= index_small; i++) {
+		int index = BipartiteMatching(volumes[i].second, volumes[index_small/3].first);
+		fout_volumes  << volumes[i].first << " " << index << " " << 0 << " " << rev_macro_to_num[volumes[i].second] << endl;
+	}
+	for(int i = index_big ; i < (int)volumes.size(); i++) {
+		int index = BipartiteMatching(volumes[i].second, volumes[index_small/3].first);
+		fout_volumes  << volumes[i].first << " " << index << " " << 1 << " " << rev_macro_to_num[volumes[i].second] << endl;
+	}
+
+#endif
+	return 0;
 } 
 

@@ -112,9 +112,17 @@ bool solve(int x) {
 					}
 				}
 				if(same_date == false) {
+				/*
 					GraphFeatures local_graph_features = PreProcessLocalGraphFeatures(x, word_bucket[x][i], local_author_count, indecies_that_have_past[0], indecies_that_have_past[1]);
 					GraphFeatures global_graph_features = PreProcessGlobalGraphFeatures(x, word_bucket[x][i], local_author_count, indecies_that_have_past[0], indecies_that_have_past[1]);
-					//                cerr << "YAY global done! " << endl;
+				*/
+
+					GraphFeatures local_graph_features, global_graph_features;
+					memset(local_graph_features.cent, 0, sizeof local_graph_features.cent);
+					memset(local_graph_features.degree, 0, sizeof local_graph_features.degree);
+					memset(global_graph_features.cent, 0, sizeof global_graph_features.cent);
+					memset(global_graph_features.degree, 0, sizeof global_graph_features.degree);
+
 					string macro_body = rev_macro_to_num[macro.macro_number];
 					int special_characters = 0;
 					int dollar_signs = 0;
@@ -248,16 +256,8 @@ int main(int argc, char *argv[]) {
 		folder = "RawOutput/Name/";
 		input_file = "All_Arxiv_Macros.txt";
 	}
-	/*
-	   {
-	   ifstream fin_important_macros("Macros_with_length_above_4.txt");
-	   string s;
-	   while(getline(fin_important_macros, s)) {
-	   important_macros.insert(s);
-	   }
-	   }
-	 */
 	Read(input_file);
+
 	sort(macros.begin(), macros.end());
 	/*
 	   { // DATA INFORMATION
@@ -317,6 +317,7 @@ int main(int argc, char *argv[]) {
     fout_learning_unique_authorPair.open(folder + to_string(N_TO_1) + "_to_1_learning" + TYPE + "-unique_authorPair" + SMART + ".txt");
 
     fout_N_becomes_1.open(folder + to_string(N_TO_1) + "_to_1_samples" + TYPE + SMART + ".txt");
+	cerr << "--------------------------->" << folder + to_string(N_TO_1) + "_to_1_samples" + TYPE + SMART + ".txt" << endl; 
     fout_N_becomes_1 << "MacroBody FinalName ";
     for(int i = 1; i <= N_TO_1; i++) {
         fout_N_becomes_1 << "Author" + to_string(i) + "MacroName ";
@@ -340,7 +341,7 @@ int main(int argc, char *argv[]) {
     fout_learning_unique_authorPair << "NumberOfDollarSigns, NumberOfBackSlashes, CurlyBraceMaxDepth, ";
     fout_learning_unique_authorPair << "MacroBodyLength, Label" << endl;
     cerr << "count of unique macros: " << macro_counter << endl;
-	/*
+	/**/
 	solve(macro_to_num["\\Re"]);
 	cerr << " done with RE" << endl;
 	solve(macro_to_num["\\proof"]);
@@ -349,7 +350,7 @@ int main(int argc, char *argv[]) {
 	cerr << " done with Reals" << endl;
 	solve(macro_to_num["\\eps"]);
 	return 0;
-	*/
+/*	*/
     for(int i = 1; i < (int)macro_counter; i++) {
        if( i % 10000 == 0 ) {
 		   cerr << i << endl;
@@ -392,16 +393,11 @@ int main(int argc, char *argv[]) {
 		fout_k_2k[i] << "AvgUsingExp, HalfAvgUsingExp, AvgAdoptionExp, HalfAvgAdoptionExp, Label" << endl;
     }
     cerr << "macro counter: " << macro_counter << endl;
-	bool temp_checker = true;
-    for(int i = 1; i < (int)macro_counter; i++) {
+    for(int i = 1; i < (int) macro_counter; i++) {
         if(i % 1000 == 0) {
             cerr << "$$$$ " << i << endl;
         }
         prediction_k_2k(i);
-		if(k_2k[0].size() > 0  && temp_checker == true) {
-			cerr << "BLAAAAH " << k_2k[10][0].output_string << " " << k_2k[10][0].authors_count << endl;
-			temp_checker = false;
-		}
     }
     for(int i = 0 ; i < 20; i++) {
         sort(k_2k[i].begin(), k_2k[i].end());

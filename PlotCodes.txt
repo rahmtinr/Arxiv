@@ -197,7 +197,7 @@ set title "Global"
 set output "Plots/LocalExperience_Change_WithGlobalThresholds-All-All.png"
 set key outside
 set xrange [0:40]
-set yrange [0:0.30]
+set yrange [0:0.05]
 plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-All.txt"  using 1:col with lines title columnheader
 
 #COLOR PLOTS GLOBAL FILTER EarlyLife - WIDE
@@ -230,7 +230,7 @@ set title "Global"
 set output "Plots/LocalExperience_Change_WithGlobalThresholds-EarlyLife-All.png"
 set key outside
 set xrange [0:40]
-set yrange [0:0.30]
+set yrange [0:0.05]
 plot for [col=2:11] "PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-EarlyLife-All.txt"  using 1:col with lines title columnheader
 
 

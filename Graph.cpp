@@ -1,6 +1,6 @@
 #include"Graph.h"
 
-const int MAX_LOCAL_N = 50000 + 10;
+const int MAX_LOCAL_N = 70000 + 10;
 vector<int> graph[MAX_LOCAL_N];
 bool mark[MAX_LOCAL_N];
 int dist[3][MAX_LOCAL_N];
@@ -51,7 +51,7 @@ void bfs(int x, int author1, int author2, int max_index) {
 
 
 GraphFeatures PreProcessLocalGraphFeatures(int x, Macro macro, int local_author_count, int index1, int index2) {
-    cerr << " graph local: " << local_author_count << endl;
+    cerr << "graph local: " << local_author_count << endl;
     for(int i = 1; i <= local_author_count; i++) {
         graph[i].clear();
     }

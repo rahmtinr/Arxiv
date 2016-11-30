@@ -91,3 +91,7 @@ bucket=10; cat RawOutput/2_to_1_Exactly2Authors/2_to_1_learning-unique_authorPai
 # create heat map on probability of winning ($2 is older) so he is the x-axis(below the diagonal)
 cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt | awk 'BEGIN{print "x y heat"}{if(NR>1){total[$2][$1]++; if($3 == 2) OlderWin[$2][$1]++;}}END{for(x=1; x < 40; x++) { for(y=0; y<40; y++) {if(total[x][y]==0) {print x, y, 0;} else {print x, y, OlderWin[x][y]/total[x][y]}}}}' | sort -n > RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder_heatmap.txt
 
+
+
+########################## find distribution of users using a macro
+cat All_Arxiv_Macros.txt  | sed -n -e '/macro_body: \\updownarrow$/,/^$/ p' |  grep "^author:" | sort | uniq -c | sort -nk1 | awk '{print $1}' | uniq -c 
