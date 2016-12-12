@@ -28,7 +28,7 @@ map<int, int> local_author_id;
 vector<int> rev_local_author_id(H);
 vector<int> rev_comp(H);
 int local_counter = 0;
-vector<vector<int> > graph(H),rev_graph(H);
+vector<vector<int> > graph(H), rev_graph(H), graph_edge_index(H);
 vector<int> local_earliest(H);
 vector<int> local_earliest_index(H);
 vector<int> fin_time;
@@ -40,6 +40,7 @@ vector<int> paper_depth_count[15][15];
 set<int> local_paper_depth_set;
 
 vector<int> interesting_macros;
+map<int, string> root_author;
 
 bool has_skipped = false;
 string skipped_string = "";
@@ -57,6 +58,7 @@ ofstream fout_max_path("RawOutput/MaxPath" + skipped_string + ".txt");
 ofstream fout_jaccard("RawOutput/Jaccard" + skipped_string + ".txt");
 ofstream fout_name_change("RawOutput/NameChange" + skipped_string + ".txt");
 ofstream fout_good_samples("RawOutput/GoodSamples" + skipped_string + ".txt");
+ofstream fout_tree_edges("RawOutput/TreeEdges" + skipped_string + ".txt");
 ofstream fout_width[15];
 // ofstream fout_one_significant("RawOutput/OnlyOneSignificantRoot" + skipped_string + ".txt");
 ofstream fout_large_tree_macros("RawOutput/MacroTrees/LargeTreeMacros.txt");
@@ -93,58 +95,7 @@ int CountDfs(int x) {
 }
 
 
-int BFS(int x) {
-    vector<pair<int, int>> Q; // (SCC number, depth)
-    vector<int> par;
-    for(int i : comp[x]) {
-        Q.push_back(make_pair(i, 0));
-        par.push_back(-1);
-        local_mark[i] = 1;
-    }
-    int head = 0;
-    while(head < (int)Q.size()) {
-        biggest_interval = max(biggest_interval, local_earliest[Q[head].first]);
-        for(int temp : graph[Q[head].first]) {
-            if(local_mark[temp] == 0) {
-                local_mark[temp] = 1;
-                Q.push_back(make_pair(temp, Q[head].second + 1));
-                par.push_back(head);
-            }
-        }
-        head++;
-    }
-    
-    int go_back = head - 1;
-    int go_back_author;
-    if(Q[head - 1].second > 4) {
-        fout_max_path << rev_macro_to_num[x] << endl;
-        while(go_back != -1) {
-            go_back_author = Q[go_back].first;
-            fout_max_path << "Depth: " << Q[go_back].second << ": "; 
-            fout_max_path << rev_author_to_num[rev_local_author_id[go_back_author]] << "    ";
-            fout_max_path << endl;
-            go_back = par[go_back];
-        }
-        fout_max_path << "___________________________________" << endl;
-        int depth = Q[head - 1].second;
-        int local_width[15];
-        memset(local_width, 0, sizeof local_width);
-        local_paper_depth_set.clear();
-        for(int i = 0; i < head; i++) {
-            local_width[Q[i].second]++;
-            local_paper_depth_set.insert(local_earliest_index[Q[i].first]);
-            if(i == head - 1 || Q[i].second != Q[i + 1].second) {
-                paper_depth_count[depth][Q[i].second].push_back(local_paper_depth_set.size());
-                local_paper_depth_set.clear();
-            }
-        }
-        for(int i = 0; i <= depth; i++) {
-            width[depth][i].push_back(local_width[i]);
-        }
-    }
 
-    return Q[head - 1].second;
-}
 
 string SimpleIntToString(int x) {
     stringstream ss;
@@ -246,6 +197,70 @@ vector<Macro> word_bucket[3 * 1000 * 1000];
 map<int, int> author_experience; // at the end of the code it will be final experience but while running it's the current_exp
 int num_above_cut = 0;
 
+
+
+int BFS(int x, int option, int macro_number) {
+    vector<pair<int, int>> Q; // (SCC number, depth)
+    vector<int> par;
+    for(int i : comp[x]) {
+        Q.push_back(make_pair(i, 0));
+        par.push_back(-1);
+        local_mark[i] = 1;
+    }
+    int head = 0;
+    while(head < (int)Q.size()) {
+        biggest_interval = max(biggest_interval, local_earliest[Q[head].first]);
+		int index = -1;
+        for(int temp : graph[Q[head].first]) {
+			index ++;
+            if(local_mark[temp] == 0) {
+                local_mark[temp] = 1;
+                Q.push_back(make_pair(temp, Q[head].second + 1));
+                par.push_back(head);
+				if(option == 2) {
+					fout_tree_edges << rev_author_to_num[rev_local_author_id[Q[head].first]] << " " << rev_local_author_id[Q[head].first] << " ";
+					fout_tree_edges << rev_author_to_num[rev_local_author_id[temp]] << " " << rev_local_author_id[temp] << " " << Q.back().second;
+					fout_tree_edges << " " << macro_number << " " << graph_edge_index[Q[head].first][index] << " " << word_bucket[macro_number][graph_edge_index[Q[head].first][index]].paper_id << endl;
+				}
+            }
+        }
+        head++;
+    }
+    
+    int go_back = head - 1;
+    int go_back_author;
+    if(Q[head - 1].second > 4) {
+        fout_max_path << rev_macro_to_num[x] << endl;
+        while(go_back != -1) {
+            go_back_author = Q[go_back].first;
+            fout_max_path << "Depth: " << Q[go_back].second << ": "; 
+            fout_max_path << rev_author_to_num[rev_local_author_id[go_back_author]] << "    ";
+            fout_max_path << endl;
+            go_back = par[go_back];
+        }
+        fout_max_path << "___________________________________" << endl;
+        int depth = Q[head - 1].second;
+        int local_width[15];
+        memset(local_width, 0, sizeof local_width);
+        local_paper_depth_set.clear();
+        for(int i = 0; i < head; i++) {
+            local_width[Q[i].second]++;
+            local_paper_depth_set.insert(local_earliest_index[Q[i].first]);
+            if(i == head - 1 || Q[i].second != Q[i + 1].second) {
+                paper_depth_count[depth][Q[i].second].push_back(local_paper_depth_set.size());
+                local_paper_depth_set.clear();
+            }
+        }
+		if(option == 1) {
+	        for(int i = 0; i <= depth; i++) {
+	            width[depth][i].push_back(local_width[i]);
+			}
+		}
+    }
+
+    return Q[head - 1].second;
+}
+
 bool MacroHasBigComponent(int x) {
 	if(rev_macro_to_num[x] == "\\mathrel{\\raise0.35ex\\hbox{$\\scriptstyle >$}\\kern-0.6em\\lower0.40ex\\hbox{{$\\scriptstyle \\sim$}}}" ||
 			rev_macro_to_num[x] == "\\mathrel{\\raise0.35ex\\hbox{$\\scriptstyle <$}\\kern-0.6em\\lower0.40ex\\hbox{{$\\scriptstyle \\sim$}}}" || 
@@ -259,6 +274,7 @@ bool MacroHasBigComponent(int x) {
 }
 
 bool solve(int x) {
+	int macro_number = x;
 	cerr << x << endl;
     if(word_bucket[x].size() < Macro_paper_usage || rev_macro_to_num[word_bucket[x][0].macro_number].length() < Macro_length_filter) { // macro needs to be used and should have a length
         return false;
@@ -276,6 +292,7 @@ bool solve(int x) {
     for(int i = 0; i < H; i++) {
         graph[i].clear();
         rev_graph[i].clear();
+		graph_edge_index[i].clear();
         comp[i].clear();
     }
     fill(local_earliest.begin(), local_earliest.end(), 0);
@@ -310,6 +327,7 @@ bool solve(int x) {
                 if(local_earliest[first] <= local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
 					graph[first].push_back(second);
                     rev_graph[second].push_back(first);
+					graph_edge_index[first].push_back(i);
                 }
                 if(local_earliest[first] < local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
                     fout_exp_difference << exp_first - exp_second << endl;
@@ -355,40 +373,49 @@ bool solve(int x) {
     cerr << "Num of components: " << comp_num << endl;
     cerr << "Num of candidate components to check: " << comps_to_check.size() << endl;
     cerr << "FIND THE BEST COMPONENT" << endl;
-    int max_people = 0;
-    int best_comp = 0;
-    int second_max_people = 0;
-    int second_best_comp = 0;
+    int max_people[10]; // number of authors
+    int best_comp[10]; // roots
+	int max_path[10];
+	memset(max_people, 0, sizeof max_people);
+	memset(best_comp, 0, sizeof best_comp);
+	set<pair<int, int>> big_comp_and_roots;
     for(int x : comps_to_check) {
         fill(local_mark.begin(), local_mark.end(), 0);
         int temp = comp[x][0];
         int num = CountDfs(temp);
-        if(max_people < num) {
-            second_best_comp = best_comp;
-            second_max_people = max_people;
-            max_people = num;
-            best_comp = x;
-        } else if (second_max_people < num) {
-            second_max_people = num;
-            second_best_comp = x;
-        }
+		big_comp_and_roots.insert(make_pair(num, x));
+		while(big_comp_and_roots.size() > 10) {
+			big_comp_and_roots.erase(big_comp_and_roots.begin());
+		}
     }
+	cerr << "----> size of comps and roots set: " << big_comp_and_roots.size() << endl;
     // Find the intersection of two biggest sets.
+	int comp_count = 0;
+	{
+		auto it = big_comp_and_roots.end();
+		while(it != big_comp_and_roots.begin() && comp_count < 10) {
+			it--;
+			max_people[comp_count] = it->first;
+			best_comp[comp_count] = it->second;
+			comp_count++;
+		}
+	}
+
     cerr << " Finding the intersection of two biggest sets" << endl;
     fill(local_mark.begin(), local_mark.end(), 0);
-    int temp = comp[best_comp][0];
+    int temp = comp[best_comp[0]][0];
     CountDfs(temp);
-    int intersection = second_max_people;
-    if(comp[second_best_comp].size() > 0 && local_mark[comp[second_best_comp][0]] == 0) {
-        intersection -= CountDfs(comp[second_best_comp][0]);
+    int intersection = max_people[1];
+    if(comp[best_comp[1]].size() > 0 && local_mark[comp[best_comp[1]][0]] == 0) {
+        intersection -= CountDfs(comp[best_comp[1]][0]);
     }
     cerr << " LOOK INTO THE BEST COMPONENT" << endl;
     set<int> seed_authors;
     set<int> seed_authors_copy;
     set<int> seed_paper_indecies;
-    for(int i = 0; i < (int)comp[best_comp].size() ; i++) {
-        seed_authors.insert(rev_local_author_id[comp[best_comp][i]]);
-        seed_authors_copy.insert(rev_local_author_id[comp[best_comp][i]]);
+    for(int i = 0; i < (int)comp[best_comp[0]].size() ; i++) {
+        seed_authors.insert(rev_local_author_id[comp[best_comp[0]][i]]);
+        seed_authors_copy.insert(rev_local_author_id[comp[best_comp[0]][i]]);
     }
     set<int> all_people;
     for(int i = 0; i < (int)word_bucket[x].size(); i++) {
@@ -401,92 +428,115 @@ bool solve(int x) {
         }
     }
     cerr << " Finding stats " << endl;
-    {
+	{
         fill(local_mark.begin(), local_mark.end(), 0);
         int local_biggest_interval;
         biggest_interval = 0;
-        int max_path1 = BFS(best_comp);
-        local_biggest_interval = biggest_interval - local_earliest[comp[best_comp][0]];
-        fill(local_mark.begin(), local_mark.end(), 0);
-        int max_path2 = 0;
-        if(second_best_comp > 0) {
-            max_path2 = BFS(second_best_comp);
-        }
-        int author_count1 = 0, author_count2 = 0;
-        int paper_count1 = 0, paper_count2 = 0;
+        max_path[0] = BFS(best_comp[0], 1, macro_number); // means we are looking for width and is best component
+        local_biggest_interval = biggest_interval - local_earliest[comp[best_comp[0]][0]];
+		for(int i = 1; i < comp_count; i++) {
+			fill(local_mark.begin(), local_mark.end(), 0);
+			if(best_comp[i] > 0) {
+				max_path[i] = BFS(best_comp[i], 0, macro_number); // 0 means it's not the best component
+			}
+		}
+        int author_count[10];
+        int paper_count	[10];
+		memset(author_count, 0, sizeof author_count);
+		memset(paper_count, 0, sizeof paper_count);
         for(int i = 0; i < local_counter; i++) {
-            if(rev_comp[i] == best_comp) {
-                author_count1++;
-            }
-            if(rev_comp[i] == second_best_comp) {
-                author_count2++;
-            }
-        }
-        int root_paper = -1;
-        for(int i = 0; i < (int)word_bucket[x].size(); i++) {
-            if(word_bucket[x][i].getTime() == local_earliest[comp[best_comp][0]]){
-                for(int author : word_bucket[x][i].authors) {
-                    int current_id = local_author_id[author];
-                    if(local_earliest[current_id] == word_bucket[x][i].getTime()) {
-                        paper_count1++;
-                        root_paper = i;
-                        break;
-                    }
-                }
-            }
-            if(second_best_comp > 0 && word_bucket[x][i].getTime() == local_earliest[comp[second_best_comp][0]]){
-                for(int author : word_bucket[x][i].authors) {
-                    int current_id = local_author_id[author];
-                    if(local_earliest[current_id] == word_bucket[x][i].getTime()) {
-                        paper_count2++;
-                        break;
-                    }
-                }
-            }
-        }
-        if(root_paper == - 1){
-            cout << "WE HAVE A PROBLEM" << endl;
-            cout << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
-            exit(0);
-        }
-        fout_stats << paper_count1 << " " << paper_count2 << " " <<  word_bucket[x].size() << " ";
-        fout_stats << author_count1 << " " << author_count2  << " " << max_people << " " << second_max_people << " " << all_people.size() << " ";
-        fout_stats << local_biggest_interval << " " << max_path1 << " " << max_path2 << " ";
-        for(int i = 0; i < (int)word_bucket[x][root_paper].categories.size(); i++) {
-            fout_stats << word_bucket[x][root_paper].categories[i];
-            if(i != (int)word_bucket[x][root_paper].categories.size() - 1) {
-                fout_stats << "/";
-            }
-        }
-        fout_stats << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
-        if(max_path1 > 4) {
-			interesting_macros.push_back(x);
+			for(int j = 0; j < comp_count; j++) {
+			    if(rev_comp[i] == best_comp[j]) {
+					 author_count[j]++;
+				}
+			}
+		}
+		int root_paper = -1;
+		for(int i = 0; i < (int)word_bucket[x].size(); i++) {
+			for(int j = 0; j < comp_count; j++) {
+				if(word_bucket[x][i].getTime() == local_earliest[comp[best_comp[j]][0]]){
+					bool check_all_are_new = true;
+					bool first_author_exists = false;
+					for(int author : word_bucket[x][i].authors) {
+						int current_id = local_author_id[author];
+						if(current_id == comp[best_comp[j]][0]) {
+							first_author_exists = true;
+						}
+						if(local_earliest[current_id] != word_bucket[x][i].getTime()) {
+							check_all_are_new = false;
+							break;
+						}
+					}
+					if(check_all_are_new == true && first_author_exists == true) {
+						paper_count[j]++;
+						if(j == 0) {
+							root_paper = i;
+						}
+					}
+				}
+			}
+		}
+		if(root_paper == - 1){
+			cout << "WE HAVE A PROBLEM" << endl;
+			cout << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
+			exit(0);
+		}
+		for(int i = 0; i < 10; i++) {
+			fout_stats << paper_count[i] << " ";
+		}
+
+		fout_stats << word_bucket[x].size() << " ";
+		for(int i = 0; i < 10; i++) {
+			fout_stats << author_count[i] << " ";
+		}
+		for(int i = 0; i < 10; i++) {
+			fout_stats << max_people[i] << " ";
+		}
+		fout_stats << all_people.size() << " ";
+		fout_stats << local_biggest_interval << " ";
+		for(int i = 0; i < 10; i++) {
+			fout_stats << max_path[i] << " ";
+		}
+		for(int i = 0; i < (int)word_bucket[x][root_paper].categories.size(); i++) {
+			fout_stats << word_bucket[x][root_paper].categories[i];
+			if(i != (int)word_bucket[x][root_paper].categories.size() - 1) {
+				fout_stats << "/";
+			}
+		}
+		fout_stats << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
+		if(max_path[0] > 4) {
+			if(max_people[0] / (double) all_people.size() > 0.5) {
+				interesting_macros.push_back(x);
+				root_author[x] = rev_author_to_num[rev_local_author_id[comp[best_comp[0]][0]]];
+			}
+			fill(local_mark.begin(), local_mark.end(), 0);
+			BFS(best_comp[0], 2, macro_number); // 2 means we want to print out edges
 			fout_large_tree_macros << rev_macro_to_num[x] << endl;
-        }
-    }
+		}
+	}
 
-    // cerr << seed_paper_indecies.size() << endl;
-    // int best_index = *seed_paper_indecies.begin();
-    // word, number of people on biggest impact, number of people on second biggest impact, intersecion of the two biggest sets,  all the people used that word, a sample text in the biggest component
-    //    feynman_fout << rev_macro_to_num[word_bucket[x][best_index].macro_number] << endl;
-    //    feynman_fout << "Number of people in max and second max component: " << max_people  << " " << second_max_people << endl;
-    //    feynman_fout << "Intersection of the two biggest components and number of all people using the macro: " << intersection << " " << all_people.size() << " " << endl;
+	// cerr << seed_paper_indecies.size() << endl;
+	// int best_index = *seed_paper_indecies.begin();
+	// word, number of people on biggest impact, number of people on second biggest impact, intersecion of the two biggest sets,  all the people used that word, a sample text in the biggest component
+	//    feynman_fout << rev_macro_to_num[word_bucket[x][best_index].macro_number] << endl;
+	//    feynman_fout << "Number of people in max and second max component: " << max_people  << " " << second_max_people << endl;
+	//    feynman_fout << "Intersection of the two biggest components and number of all people using the macro: " << intersection << " " << all_people.size() << " " << endl;
 
-    feynman_fout << max_people  << " " << all_people.size() << endl;
-    //    feynman_fout << max_people  << " " << second_max_people << endl;
-    //    feynman_fout << intersection << " " << all_people.size() << " " << endl;
-    // When the best paper was published, when the best burst started
-    //    feynman_fout << word_bucket[x][best_index].day  << "/" << word_bucket[x][best_index].month << "/" << word_bucket[x][best_index].year << endl;
-    //    for(int author : seed_authors_copy) {
-    //       feynman_fout << "Author: " << rev_author_to_num[author] << endl;
-    //    }
-    //    feynman_fout << endl << "________________________________________" << endl;
+	feynman_fout << max_people  << " " << all_people.size() << endl;
+	//    feynman_fout << max_people  << " " << second_max_people << endl;
+	//    feynman_fout << intersection << " " << all_people.size() << " " << endl;
+	// When the best paper was published, when the best burst started
+	//    feynman_fout << word_bucket[x][best_index].day  << "/" << word_bucket[x][best_index].month << "/" << word_bucket[x][best_index].year << endl;
+	//    for(int author : seed_authors_copy) {
+	//       feynman_fout << "Author: " << rev_author_to_num[author] << endl;
+	//    }
+	//    feynman_fout << endl << "________________________________________" << endl;
 
-//	if(word_bucket[x].size() > 100) { // TODO
-	    fout_frac_length << rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << max_people / (double)all_people.size() << endl;
-//	}
-    fout_biggest_second_biggest << max_people / (double) all_people.size()  << " " << second_max_people/(double) all_people.size() << endl;
-    fout_heat_map <<  rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << all_people.size() << " " << max_people/(double) all_people.size() << endl; 
+	//	if(word_bucket[x].size() > 100) { // TODO
+	fout_frac_length << rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << max_people[0] / (double)all_people.size() << endl;
+	//	}
+	fout_biggest_second_biggest << max_people[0] / (double) all_people.size()  << " " << max_people[1] / (double) all_people.size() << endl;
+	fout_heat_map <<  rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << all_people.size() << " " << max_people[0] / (double) all_people.size() << endl; 
 	if(MacroHasBigComponent(x) == true) {
 		for(int l = 0; l < (int)word_bucket[x].size(); l++) {
 			fout_good_samples << l << endl;
@@ -496,30 +546,30 @@ bool solve(int x) {
 		fout_good_samples << "_____________________________________________________________" << endl;
 	}
 #endif
-    return true;
+	return true;
 }
 
 double Jaccard(int x, int y) {
-    set<int> x_authors;
-    set<int> all_authors;
-    set<int> intersect_authors;
+	set<int> x_authors;
+	set<int> all_authors;
+	set<int> intersect_authors;
 
-    for(Macro macro : word_bucket[x]) {
-        for(int author : macro.authors) {
-            x_authors.insert(author);
-            all_authors.insert(author);
-        }
-    }
-    
-    for(Macro macro : word_bucket[y]) {
-        for(int author : macro.authors) {
-            all_authors.insert(author);
-            if(x_authors.find(author) != x_authors.end()) {
-                intersect_authors.insert(author);
-            }
-        }
-    }
-    return ((double) intersect_authors.size()) / all_authors.size();
+	for(Macro macro : word_bucket[x]) {
+		for(int author : macro.authors) {
+			x_authors.insert(author);
+			all_authors.insert(author);
+		}
+	}
+
+	for(Macro macro : word_bucket[y]) {
+		for(int author : macro.authors) {
+			all_authors.insert(author);
+			if(x_authors.find(author) != x_authors.end()) {
+				intersect_authors.insert(author);
+			}
+		}
+	}
+	return ((double) intersect_authors.size()) / all_authors.size();
 }
 
 const int Max_N = 20000 + 10;
@@ -545,17 +595,22 @@ bool dfs(int x) {
 }
 
 
-int BipartiteMatching(int x, int y) {
+int BipartiteMatching(int x, int y, bool is_vol) {
 	map<int, int> author_to_local_id, rev_author_to_local_id;
 	int author_count = 1;
 	memset(mark, 0, sizeof mark);
 	memset(match, 0, sizeof match);
+	int temp = 0;
 	for(Macro macro : word_bucket[x]) {
+		temp++;
 		for(int author : macro.authors) {
 			if(author_to_local_id.find(author) == author_to_local_id.end()) {
 				author_to_local_id[author] = author_count;
 				rev_author_to_local_id[author_count] = author;
 				author_count++;
+				if(author_count == y && is_vol == false) {
+					return temp;
+				}
 			}
 		}
 	}
@@ -568,7 +623,7 @@ int BipartiteMatching(int x, int y) {
 		if(dfs(paper_count) == true) {
 			memset(mark, 0, 4 * paper_count + 8);
 			volume++;
-			if(volume == y) {
+			if(volume == y && is_vol == true) {
 				break;
 			}
 		}
@@ -577,25 +632,23 @@ int BipartiteMatching(int x, int y) {
 	for(int i = 0; i < paper_count; i++) {
 		bip_graph[i].clear();
 	}
-	if(y == 0) {
-		return volume;
-	} else {
-		for(int i = 1; i < author_count; i++) {
-			if(match[i] == 0){
-				continue;
-			}
-			//cerr << rev_author_to_num[rev_author_to_local_id[i]] << " ----- " << word_bucket[x][match[i] - 1].paper_id << endl;
+	if(y == 0) { // return volume if you want the volume metric but we can also return author_count
+		if(is_vol == true) {
+			return volume;
+		} else {
+			return author_count;
 		}
+	} else {
 		return paper_count;	
 	}
 }
 
 int main() {
-    ifstream fin("All_Arxiv_Macros.txt");
-    int macro_counter = 1;
-    int author_counter = 1;
-    string s, temp;
-    int skipped = 0;
+	ifstream fin("All_Arxiv_Macros.txt");
+	int macro_counter = 1;
+	int author_counter = 1;
+	string s, temp;
+	int skipped = 0;
 
 	while(getline(fin, s)) {
         Macro macro;
@@ -744,7 +797,24 @@ int main() {
         word_bucket[macros[i].macro_number].push_back(macros[i]);
     }
     macros.clear();
-    fout_stats << "#papersRoot1 #papersRoot2 #papersAll #authorsRoot1 #authorsRoot2 #authorsComponent1 #authorsComponent2 #authorsAll BiggestAdaptingInterval MaxPathRoot1 MaxPathRoot2 Categories Macro" << endl;
+	for(int i = 0; i < 10; i++) {
+		fout_stats << "#papersRoot" << to_string(i) << " ";
+	}
+	fout_stats << "#papersAll ";
+	for(int i = 0; i < 10; i++) {
+		fout_stats << "#authorsRoot" << to_string(i) << " ";
+	}
+	for(int i = 0; i < 10; i++) {
+		fout_stats << "#authorsComponent" << to_string(i) << " ";
+	}
+	fout_stats << "#authorsAll  ";
+	fout_stats << "BiggestAdaptingInterval ";
+	for(int i = 0; i < 10; i++) {
+		fout_stats << "#MaxPathRoot" << to_string(i) << " ";
+	}
+	fout_stats << "Categories Macro" << endl;
+
+	fout_tree_edges << "Source Destination DepthOfDestination MacroNumber IndexInWordBucket" << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
         solve(i); 
     }
@@ -806,10 +876,10 @@ int main() {
 #endif
 
 #if VOLUME
+	bool is_vol = false;
 	vector<pair<int, int> > volumes; // volume, macro_number
 	for(int x : interesting_macros) {
-		cerr << " started matching for x " << endl;
-		int volume = BipartiteMatching(x, 0);
+		int volume = BipartiteMatching(x, 0, is_vol);
 		volumes.push_back(make_pair(volume, x));
 	}
 	sort(volumes.begin(), volumes.end());
@@ -824,17 +894,19 @@ int main() {
 	fill(rev_local_author_id.begin(), rev_local_author_id.end(), 0);
 
 	ofstream fout_volumes("RawOutput/BipartiteThresholds.txt");
-	fout_volumes << "FinalVolume BreakIndex Label MacroBody" << endl;
+	fout_volumes << "FinalVolume BreakIndex Label RootAuthor MacroBody" << endl;
 	for(int i = volumes.size() / 6; i <= index_small; i++) {
-		int index = BipartiteMatching(volumes[i].second, volumes[index_small/3].first);
-		fout_volumes  << volumes[i].first << " " << index << " " << 0 << " " << rev_macro_to_num[volumes[i].second] << endl;
+		int index = BipartiteMatching(volumes[i].second, volumes[index_small/3].first, is_vol);
+		fout_volumes << volumes[i].first << " " << index << " " << 0 << " " << root_author[volumes[i].second] << " ";
+		fout_volumes << rev_macro_to_num[volumes[i].second] << endl;
 	}
 	for(int i = index_big ; i < (int)volumes.size(); i++) {
-		int index = BipartiteMatching(volumes[i].second, volumes[index_small/3].first);
-		fout_volumes  << volumes[i].first << " " << index << " " << 1 << " " << rev_macro_to_num[volumes[i].second] << endl;
+		int index = BipartiteMatching(volumes[i].second, volumes[index_small/3].first, is_vol); 
+		fout_volumes << volumes[i].first << " " << index << " " << 1 << " " << root_author[volumes[i].second] << " ";
+		fout_volumes << rev_macro_to_num[volumes[i].second] << endl;
 	}
 
-#endif
+	#endif
 	return 0;
 } 
 

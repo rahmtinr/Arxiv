@@ -95,3 +95,9 @@ cat RawOutput/2_to_1_Exactly2Authors/2_to_1_YoungerVsOlder-unique_authorPair.txt
 
 ########################## find distribution of users using a macro
 cat All_Arxiv_Macros.txt  | sed -n -e '/macro_body: \\updownarrow$/,/^$/ p' |  grep "^author:" | sort | uniq -c | sort -nk1 | awk '{print $1}' | uniq -c 
+
+
+
+########################## New Stats file:
+cat RawOutput/Stats.txt  | awk '{if($32 > 100 || NR ==1) {for(t=44;t<=NF;t++) {$t="";} print}}' | awk '{if(NR==1){$44="Label";} else{if($32>176) {$44 =1} else {$44=0}}; for(t=32; t<44;t++){$t=$(t+1)} $44=""; print;}' | colnum
+
