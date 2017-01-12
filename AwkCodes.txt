@@ -50,6 +50,7 @@ cat RawOutput/Experience_changed_name-wide.txt | awk 'BEGIN{printf "LocalExperie
 
 #All-narrow
 cat RawOutput/Experience_changed_name-narrow.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-narrow.txt
+
 #All - All
 cat RawOutput/Experience_changed_name.txt | awk 'BEGIN{printf "LocalExperience "; for(j = 40; j <= 130; j+=10) { printf "%d ", j} print ""}{for(j=40; j <=130; j+=10) {if(NR>1 && $1 >= j) a[$4][j]+=$5; b[$4][j]++;}} END { for(i = 1; i <= 200; i++){ printf "%d ", i; for(j=40; j<= 130; j+=10) {printf "%f ", a[i][j]/b[i][j];} print ""}}' | sort -n > PlotableData/LocalExperience_ChangeFraction_WithGlobalThresholds-All-All.txt
 

@@ -11,6 +11,7 @@ using namespace std;
 
 const int Macro_length_filter = 20;
 const int Macro_paper_usage = 30;
+const int BASE_YEAR = 1990;
 
 map<string, int> macro_to_num;
 map<int, string> rev_macro_to_num;
@@ -42,6 +43,7 @@ map<int, int> local_co_authorship_distribution_current, local_co_authorship_dist
 int local_tree_edges = 0;
 
 vector<int> interesting_macros;
+set<pair<string, int>> bfs_out_deg; // author_name and macro_number
 
 bool has_skipped = false;
 string skipped_string = "";
@@ -167,10 +169,15 @@ int MacroDifferenceInMonth(Macro m1, Macro m2) {
 	return (m2.year - m1.year) * 12 + (m2.month - m1.month);
 }
 
+bool cmp(pair<pair<int, Macro>, int> a, pair<pair<int, Macro>, int> b) {
+	return a.first < b.first;
+}
+
 vector<Macro> macros;
 vector<Macro> word_bucket[3 * 1000 * 1000]; 
 map<int, int> author_experience; // at the end of the code it will be final experience but while running it's the current_exp
-vector<pair<pair<int, Macro>, int> > dag_edges; // Their current experience and final experience.
+vector<pair<pair<int, Macro>, int> > dag_edges[40]; // Their current experience and final experience.
+vector<pair<pair<int, Macro>, int> > internal_dag_edges[40]; // Their current experience and final experience.
 int num_above_cut = 0;
 
 void read() {
@@ -319,6 +326,7 @@ bool solve(int x) {
 	ofstream fout_macro_tree_edges("RawOutput/MacroTrees/edges-" + to_string(x) + ".txt");
 	fout_macro_tree_nodes << "Id Label" << endl;
 	fout_macro_tree_edges << "Source Target Label" << endl;
+	fout_macro_indexer << x << " " << rev_macro_to_num[x] << endl;
     for(int i = 0; i < (int)word_bucket[x].size(); i++) {
         for(int author : word_bucket[x][i].authors) {
             if(local_author_id.find(author) == local_author_id.end()){
@@ -329,6 +337,10 @@ bool solve(int x) {
             }
         }
         int j = -1;
+		int earliest_author = 1000 * 1000 * 1000;
+		for(int author1 : word_bucket[x][i].authors) {
+			earliest_author = min(earliest_author, local_earliest[local_author_id[author1]]);
+		}
         for(int author1 : word_bucket[x][i].authors) {
             j++;
             int k = -1;
@@ -339,20 +351,31 @@ bool solve(int x) {
                 }
                 int first = local_author_id[author1];
                 int second = local_author_id[author2];
-                if(local_earliest[first] <= local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
+                if((local_earliest[first] < local_earliest[second] || local_earliest[first] == earliest_author) && local_earliest[second] == word_bucket[x][i].getTime()) {
 					fout_macro_tree_edges << rev_author_to_num[author1] << " " << rev_author_to_num[author2] << " " << word_bucket[x][i].year;
 					fout_macro_tree_edges << " " << word_bucket[x][i].month << " " << word_bucket[x][i].paper_id << endl;
-					int co_authorship_exp_current = word_bucket[x][i].co_authorship[make_pair(min(author1, author2), max(author1, author2))];
-					int co_authorship_exp_final = global_co_authorship[make_pair(min(author1, author2), max(author1, author2))];
-					local_co_authorship_distribution_current[co_authorship_exp_current]++;
-					local_co_authorship_distribution_final[co_authorship_exp_final]++;
-					dag_edges.push_back(make_pair(make_pair(co_authorship_exp_current, word_bucket[x][i]), co_authorship_exp_final));
-					local_tree_edges++;
+						int rel_year = word_bucket[x][i].year - BASE_YEAR; 
+						int co_authorship_exp_current = word_bucket[x][i].co_authorship[make_pair(min(author1, author2), max(author1, author2))];
+						int co_authorship_exp_final = global_co_authorship[make_pair(min(author1, author2), max(author1, author2))];
+						if(co_authorship_exp_current == 1) {
+							local_co_authorship_distribution_current[co_authorship_exp_current]++;
+							local_co_authorship_distribution_final[co_authorship_exp_final]++;
+							local_tree_edges++;
+							if(bfs_out_deg.find(make_pair(rev_author_to_num[author2], x)) == bfs_out_deg.end()) {
+								dag_edges[rel_year-(rel_year%2)].push_back(make_pair(make_pair(co_authorship_exp_current, word_bucket[x][i]), co_authorship_exp_final));
+							}
+							if(bfs_out_deg.find(make_pair(rev_author_to_num[author2], x)) != bfs_out_deg.end()) {
+								if(word_bucket[x][i].year == 2006 || word_bucket[x][i].year == 2007) {
+									cerr << "Internal: " << rev_author_to_num[author1] << " " << rev_author_to_num[author2] << " " 
+										<< co_authorship_exp_current << " " << co_authorship_exp_final << endl;
+								}
+								internal_dag_edges[rel_year-(rel_year%2)].push_back(make_pair(make_pair(co_authorship_exp_current, word_bucket[x][i]), co_authorship_exp_final));
+							}
+						}
                 }
             }
         }
     }
-
 	for(pair<int, int> p : local_author_id) {
 		fout_macro_tree_nodes << rev_author_to_num[p.first] << " " << rev_author_to_num[p.first] << endl;
 	}
@@ -430,7 +453,76 @@ int main() {
 		cout << "current_experiences index and size: "<< i << " ------- " << current_experiences_on_time_windows[i].size() << endl;
 	}
     macros.clear();
-    for(int x : interesting_macros) {
+  	{ // read edges on BFS tree an depth only for interesting macros
+		string s,t;
+		int depth;
+		int count[15], sum_final_experience[15];
+		double sum_current_experience[15];
+
+		int count_internal[15], sum_internal_final_experience[15];
+		double sum_internal_current_experience[15];
+		memset(count, 0, sizeof count);
+		memset(sum_current_experience, 0, sizeof sum_current_experience);
+		memset(sum_final_experience, 0, sizeof sum_final_experience);
+		int macro_number, index;
+		int num1, num2;
+		string paper_id;
+		{
+			ifstream fin_tree_edges("RawOutput/TreeEdges.txt");
+			getline(fin_tree_edges, s);
+			while(fin_tree_edges >> s >> num1 >> t >> num2 >> depth >> macro_number >> index >> paper_id) {
+				int author1 = author_to_num[s];
+				int author2 = author_to_num[t];
+				if(author1 > author2) {
+					swap(author1, author2);
+				}
+				count[depth] ++;
+				bfs_out_deg.insert(make_pair(s, macro_number));
+				sum_final_experience[depth] += global_co_authorship[make_pair(author1, author2)];
+				int current_experience = word_bucket[macro_number][index].co_authorship[make_pair(author1, author2)];
+				int time_index = 2 * (word_bucket[macro_number][index].year - 1990) + word_bucket[macro_number][index].month / 6;
+				int index = lower_bound(current_experiences_on_time_windows[time_index].begin(), current_experiences_on_time_windows[time_index].end(), current_experience)
+					- current_experiences_on_time_windows[time_index].begin();
+				//			cerr << "time index: " << time_index << " " << current_experiences_on_time_windows[time_index].size() << " " << current_experience << endl;
+				sum_current_experience[depth] += index / (double) current_experiences_on_time_windows[time_index].size();
+
+			}
+			fin_tree_edges.close();
+		}
+	{
+			ifstream fin_tree_edges("RawOutput/TreeEdges.txt");
+			getline(fin_tree_edges, s);
+			while(fin_tree_edges >> s >> num1 >> t >> num2 >> depth >> macro_number >> index >> paper_id) {
+				int author1 = author_to_num[s];
+				int author2 = author_to_num[t];
+				if(author1 > author2) {
+					swap(author1, author2);
+				}
+				if(bfs_out_deg.find(make_pair(s, macro_number)) != bfs_out_deg.end()) {
+					count_internal[depth] ++;
+					sum_internal_final_experience[depth] += global_co_authorship[make_pair(author1, author2)];
+					int current_experience = word_bucket[macro_number][index].co_authorship[make_pair(author1, author2)];
+					int time_index = 2 * (word_bucket[macro_number][index].year - 1990) + word_bucket[macro_number][index].month / 6;
+					int index = lower_bound(current_experiences_on_time_windows[time_index].begin(), current_experiences_on_time_windows[time_index].end(), current_experience)
+						- current_experiences_on_time_windows[time_index].begin();
+				//			cerr << "time index: " << time_index << " " << current_experiences_on_time_windows[time_index].size() << " " << current_experience << endl;
+					sum_internal_current_experience[depth] += index / (double) current_experiences_on_time_windows[time_index].size();
+				}
+
+			}
+			fin_tree_edges.close();
+		}
+		ofstream fout_tree_edges("RawOutput/TreeLayerAvgFinalExperience.txt");
+		fout_tree_edges << "Depth EdgeCount SumFinalExperience SumCurrentExperience AvgFinalExperience AvgCurrentExperience "
+			<< "InternalAvgFinalExperience InternalAvgCurrentExperience" << endl;
+		for(int i = 1; i < 12; i++) {
+			fout_tree_edges << i << " " << count_internal[i] << " " << sum_final_experience[i] << " " << sum_current_experience[i] << " " 
+				<< sum_final_experience[i] / (double)count_internal[i] << " " <<  sum_current_experience[i] / (double) count_internal[i] << " "
+				<< sum_internal_final_experience[i] / (double)count_internal[i] << " " <<  sum_internal_current_experience[i] / (double) count_internal[i] << endl;
+		}
+	}
+	
+	for(int x : interesting_macros) {
         solve(x); 
 		for(Macro macro : word_bucket[x]) {
 			macros.push_back(macro);
@@ -477,95 +569,158 @@ int main() {
 	}
 	
 	{ // look at random shuffled co-authroship and find a match for people in dag_edges
-		vector<pair<pair<int, Macro>, int> > all_edges;
+		vector<pair<pair<int, Macro>, int> > all_edges[40];
 		for(Macro macro : macros) {
 			for(int author1 : macro.authors) {
 				for(int author2 : macro.authors) {
 					if(author1 >= author2) {
 						continue;
 					}
-					int co_authorship_exp_current = macro.co_authorship[make_pair(min(author1, author2), max(author1, author2))];
-					int co_authorship_exp_final = global_co_authorship[make_pair(min(author1, author2), max(author1, author2))];
-					all_edges.push_back(make_pair(make_pair(co_authorship_exp_current, macro), co_authorship_exp_final));
+					// ONLY LOOK AT 2005 // TODO
+//					if(macro.year == 2005) {
+						int rel_year = macro.year - BASE_YEAR;
+						int co_authorship_exp_current = macro.co_authorship[make_pair(min(author1, author2), max(author1, author2))];
+						int co_authorship_exp_final = global_co_authorship[make_pair(min(author1, author2), max(author1, author2))];
+						if(co_authorship_exp_current == 1) { // current includes the on in this macro
+							all_edges[rel_year-(rel_year%2)].push_back(make_pair(make_pair(co_authorship_exp_current, macro), co_authorship_exp_final));
+							if(macro.year == 2006 || macro.year == 2007) {
+								cerr << "All-edges: " << rev_author_to_num[author1] << " " << rev_author_to_num[author2] << " " 
+									<< co_authorship_exp_current << " " << co_authorship_exp_final << endl;
+							}
+						}
+//					}
 				}
 			}
 		}
-		sort(all_edges.begin(), all_edges.end());
-		sort(dag_edges.begin(), dag_edges.end());
-		int p = 0, q = 0;
-		int all_has_higher_final = 0, dag_has_higher_final = 0, equal_final = 0;
-		int all_is_earlier = 0, dag_is_earlier = 0, equal_date = 0;
-		while(p < (int)all_edges.size() && q < (int) dag_edges.size()) {
-			if(all_edges[p].first.first == dag_edges[q].first.first && MacroDifferenceInMonth(all_edges[p].first.second, dag_edges[q].first.second) < 6) {
-				cerr << "Month difference: " << MacroDifferenceInMonth(all_edges[p].first.second, dag_edges[q].first.second) << endl; 
-				// match found!
-				if(dag_edges[q].second > all_edges[p].second) {
-					dag_has_higher_final++;
-				} else if(dag_edges[q].second < all_edges[p].second){
-					all_has_higher_final++;
-				} else {
-					equal_final++;
-					p++; q++;
-					continue;
+		for(int i = 0; i < 20; i++) {
+			sort(all_edges[i].begin(), all_edges[i].end(), cmp); // cmp only needs to compare the first in the pair which is a pair itself - second is final_exp
+			sort(dag_edges[i].begin(), dag_edges[i].end(), cmp);
+			sort(internal_dag_edges[i].begin(), internal_dag_edges[i].end(), cmp);
+		}
+		{
+			ofstream fout_dag_vs_all_edges("RawOutput/TerminalDagVsAllEdgePrediction.txt");
+			fout_dag_vs_all_edges << "Year SuccessRateOnDag deltay" << endl;
+			for(int rel_year = 0; rel_year < 20; rel_year++) {
+				int p = 0, q = 0;
+				int all_has_higher_final = 0, dag_has_higher_final = 0, equal_final = 0;
+				int all_is_earlier = 0, dag_is_earlier = 0, equal_date = 0;
+				while(p < (int)all_edges[rel_year].size() && q < (int) dag_edges[rel_year].size()) {
+					if(all_edges[rel_year][p].first.first == dag_edges[rel_year][q].first.first &&
+							MacroDifferenceInMonth(all_edges[rel_year][p].first.second, dag_edges[rel_year][q].first.second) < 1) {
+						// match found!
+						if(all_edges[rel_year][p].first.second.getTime() < dag_edges[rel_year][q].first.second.getTime()) {
+							all_is_earlier++;	
+						} else if (dag_edges[rel_year][q].first.second.getTime() < all_edges[rel_year][p].first.second.getTime()) {
+							dag_is_earlier++;
+						} else {
+							equal_date++;
+						}
+
+						if(dag_edges[rel_year][q].second > all_edges[rel_year][p].second) {
+							dag_has_higher_final++;
+						} else if(dag_edges[rel_year][q].second < all_edges[rel_year][p].second){
+							all_has_higher_final++;
+						} else {
+							equal_final++;
+						}
+						p++; q++;
+						continue;
+					}
+
+					if (all_edges[rel_year][p] < dag_edges[rel_year][q]) {
+						p++;
+					} else if(dag_edges[rel_year][q] < all_edges[rel_year][p]) {
+						q++;
+					}
 				}
-				if(all_edges[p].first.second.getTime() < dag_edges[q].first.second.getTime()) {
-					all_is_earlier++;	
-				} else if (dag_edges[q].first.second.getTime() < all_edges[p].first.second.getTime()) {
-					dag_is_earlier++;
-				} else {
-					equal_date++;
-				}
-				p++; q++;
-				continue;
-			}
-			
-			if (all_edges[p] < dag_edges[q]) {
-				p++;
-			} else if(dag_edges[q] < all_edges[p]) {
-				q++;
+				double denom = dag_has_higher_final + all_has_higher_final;
+				double frac = dag_has_higher_final / denom;
+				fout_dag_vs_all_edges << rel_year + BASE_YEAR << " " << 100 * frac << " " << 100 * sqrt((frac * (1-frac))/(denom)) << endl; 
 			}
 		}
-		ofstream fout_dag_vs_all_edges("RawOutput/DagVsAllEdgePrediction.txt");
-		cout << "dag wins: " << dag_has_higher_final << ", all_ wins:" << all_has_higher_final << " " << equal_final << endl; 
-		cout << "dag was earlier: " << dag_is_earlier << ", all was earlier: " << all_is_earlier << " " << equal_date << endl;
+		{
+			ofstream fout_dag_vs_all_edges("RawOutput/InternalDagVsAllEdgePrediction.txt");
+			fout_dag_vs_all_edges << "Year SuccessRateOnInternalDag deltay" << endl;
+			for(int rel_year = 0; rel_year < 20; rel_year++) {
+				int p = 0, q = 0;
+				int all_has_higher_final = 0, dag_has_higher_final = 0, equal_final = 0;
+				int all_is_earlier = 0, dag_is_earlier = 0, equal_date = 0;
+				while(p < (int)all_edges[rel_year].size() && q < (int) internal_dag_edges[rel_year].size()) {
+					if(all_edges[rel_year][p].first.first == internal_dag_edges[rel_year][q].first.first &&
+							MacroDifferenceInMonth(all_edges[rel_year][p].first.second, internal_dag_edges[rel_year][q].first.second) < 1) {
+						// match found!
+						if(all_edges[rel_year][p].first.second.getTime() < internal_dag_edges[rel_year][q].first.second.getTime()) {
+							all_is_earlier++;	
+						} else if (internal_dag_edges[rel_year][q].first.second.getTime() < all_edges[rel_year][p].first.second.getTime()) {
+							dag_is_earlier++;
+						} else {
+							equal_date++;
+						}
+						if(internal_dag_edges[rel_year][q].second > all_edges[rel_year][p].second) {
+							dag_has_higher_final++;
+						} else if(internal_dag_edges[rel_year][q].second < all_edges[rel_year][p].second){
+							all_has_higher_final++;
+						} else {
+							equal_final++;
+						}
+						p++; q++;
+						continue;
+					}
+
+					if (all_edges[rel_year][p] < internal_dag_edges[rel_year][q]) {
+						p++;
+					} else if(internal_dag_edges[rel_year][q] < all_edges[rel_year][p]) {
+						q++;
+					}
+				}
+				double denom = dag_has_higher_final + all_has_higher_final;
+				double frac = dag_has_higher_final / denom;
+				fout_dag_vs_all_edges << rel_year + BASE_YEAR << " " << 100 * frac << " " << 100 * sqrt((frac * (1-frac))/(denom)) << endl; 
+			}
+		}
+		{
+			ofstream fout_dag_vs_all_edges("RawOutput/InternalDagVsTerminalDag.txt");
+			fout_dag_vs_all_edges << "Year SuccessRateOnInternalDag deltay" << endl;
+			for(int rel_year = 0; rel_year < 20; rel_year++) {
+				int p = 0, q = 0;
+				int internal_has_higher_final = 0, dag_has_higher_final = 0, equal_final = 0;
+				int internal_is_earlier = 0, dag_is_earlier = 0, equal_date = 0;
+				while(p < (int)dag_edges[rel_year].size() && q < (int) internal_dag_edges[rel_year].size()) {
+					if(dag_edges[rel_year][p].first.first == internal_dag_edges[rel_year][q].first.first 
+							&& MacroDifferenceInMonth(dag_edges[rel_year][p].first.second, internal_dag_edges[rel_year][q].first.second) < 1) {
+						// match found!
+						if(dag_edges[rel_year][p].first.second.getTime() < internal_dag_edges[rel_year][q].first.second.getTime()) {
+							dag_is_earlier++;	
+						} else if (internal_dag_edges[rel_year][q].first.second.getTime() < dag_edges[rel_year][p].first.second.getTime()) {
+							internal_is_earlier++;
+						} else {
+							equal_date++;
+						}
+						if(internal_dag_edges[rel_year][q].second > dag_edges[rel_year][p].second) {
+							internal_has_higher_final++;
+						} else if(internal_dag_edges[rel_year][q].second < all_edges[rel_year][p].second){
+							dag_has_higher_final++;
+						} else {
+							equal_final++;
+						}
+						p++; q++;
+						continue;
+					}
+
+					if (dag_edges[rel_year][p] < internal_dag_edges[rel_year][q]) {
+						p++;
+					} else if(internal_dag_edges[rel_year][q] < dag_edges[rel_year][p]) {
+						q++;
+					}
+				}
+				double denom = (dag_has_higher_final + internal_has_higher_final);
+				double frac = internal_has_higher_final / denom;
+				fout_dag_vs_all_edges << rel_year + BASE_YEAR << " " << 100 * frac << " " << 100 * sqrt((frac * (1-frac))/(denom)) << endl; 
+			}
+		}
 	}
 
-	{ // read edges on BFS tree an depth only for interesting macros
-		ifstream fin_tree_edges("RawOutput/TreeEdges.txt");
-		string s,t;
-		getline(fin_tree_edges, s);
-		int depth;
-		int count[15], sum_final_experience[15];
-		double sum_current_experience[15];
-		memset(count, 0, sizeof count);
-		memset(sum_current_experience, 0, sizeof sum_current_experience);
-		memset(sum_final_experience, 0, sizeof sum_final_experience);
-		int macro_number, index;
-		int num1, num2;
-		string paper_id;
-		while(fin_tree_edges >> s >> num1 >> t >> num2 >> depth >> macro_number >> index >> paper_id) {
-			int author1 = author_to_num[s];
-			int author2 = author_to_num[t];
-			if(author1 > author2) {
-				swap(author1, author2);
-			}
-			count[depth] ++;
-			sum_final_experience[depth] += global_co_authorship[make_pair(author1, author2)];
-			int current_experience = word_bucket[macro_number][index].co_authorship[make_pair(author1, author2)];
-			int time_index = 2 * (word_bucket[macro_number][index].year - 1990) + word_bucket[macro_number][index].month / 6;
-			int index = lower_bound(current_experiences_on_time_windows[time_index].begin(), current_experiences_on_time_windows[time_index].end(), current_experience)
-				- current_experiences_on_time_windows[time_index].begin();
-//			cerr << "time index: " << time_index << " " << current_experiences_on_time_windows[time_index].size() << " " << current_experience << endl;
-			sum_current_experience[depth] += index / (double) current_experiences_on_time_windows[time_index].size();
 
-		}
-		ofstream fout_tree_edges("RawOutput/TreeLayerAvgFinalExperience.txt");
-		fout_tree_edges << "Depth EdgeCount SumFinalExperience SumCurrentExperience AvgFinalExperience AvgCurrentExperience" << endl;
-		for(int i = 1; i < 12; i++) {
-			fout_tree_edges << i << " " << count[i] << " " << sum_final_experience[i] << " " << sum_current_experience[i] << " " 
-				<< sum_final_experience[i] / (double)count[i] << " " <<  sum_current_experience[i] / (double) count[i]<< endl;
-		}
-	}
-    return 0;
+	return 0;
 } 
 

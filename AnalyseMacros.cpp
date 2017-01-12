@@ -6,12 +6,13 @@
 #include<sstream>
 #include<vector>
 #include<algorithm>
+#include<cstdlib>
 
 
 #define JACCARD false
 #define NAME_PRINTER false
 #define ONION_SHAPE_TREE false
-#define VOLUME true
+#define VOLUME false
 
 using namespace std;
 
@@ -40,12 +41,11 @@ vector<int> paper_depth_count[15][15];
 set<int> local_paper_depth_set;
 
 vector<int> interesting_macros;
+set<int> interesting_macros2; // macros that have depth more than 4
 map<int, string> root_author;
 
 bool has_skipped = false;
 string skipped_string = "";
-//ofstream feynman_fout("Feynman_skipped.txt");
-//ofstream feynman_fout("Feynman.txt");
 
 ofstream feynman_fout("RawOutput/Feynman_summary" + skipped_string + ".txt");
 //ofstream fout_frac_length("RawOutput/ONLYBIG-Biggest_component_MacroLength" + skipped_string + ".txt");
@@ -53,8 +53,10 @@ ofstream fout_frac_length("RawOutput/Biggest_component_MacroLength" + skipped_st
 ofstream fout_biggest_second_biggest("RawOutput/Biggest_SecondBiggest" + skipped_string + ".txt");
 ofstream fout_heat_map("RawOutput/MacroLength_AllAuthors_Biggest" + skipped_string + ".txt");
 ofstream fout_stats("RawOutput/Stats" + skipped_string + ".txt");
+ofstream fout_stats2("RawOutput/TreeStats" + skipped_string + ".txt");
 ofstream fout_exp_difference("RawOutput/AllExpDifference" + skipped_string + ".txt");
 ofstream fout_max_path("RawOutput/MaxPath" + skipped_string + ".txt");
+ofstream fout_max_path2("RawOutput/MaxPath2" + skipped_string + ".txt");
 ofstream fout_jaccard("RawOutput/Jaccard" + skipped_string + ".txt");
 ofstream fout_name_change("RawOutput/NameChange" + skipped_string + ".txt");
 ofstream fout_good_samples("RawOutput/GoodSamples" + skipped_string + ".txt");
@@ -62,6 +64,10 @@ ofstream fout_tree_edges("RawOutput/TreeEdges" + skipped_string + ".txt");
 ofstream fout_width[15];
 // ofstream fout_one_significant("RawOutput/OnlyOneSignificantRoot" + skipped_string + ".txt");
 ofstream fout_large_tree_macros("RawOutput/MacroTrees/LargeTreeMacros.txt");
+ofstream fout_pass_on_summary("RawOutput/PassOnRawData.txt");
+ofstream fout_inherited_summary("RawOutput/InheritanceRawData.txt");
+ofstream fout_pass_on_binary_summary("RawOutput/PassOnBinaryRawData.txt");
+ofstream fout_inherited_binary_summary("RawOutput/InheritanceBinaryRawData.txt");
 
 void StrongDfs(int x) {
     local_mark[x] = 1;
@@ -208,8 +214,13 @@ int BFS(int x, int option, int macro_number) {
         local_mark[i] = 1;
     }
     int head = 0;
+	vector<pair<int, int>> max_path_2;
     while(head < (int)Q.size()) {
         biggest_interval = max(biggest_interval, local_earliest[Q[head].first]);
+		Macro m1 = word_bucket[macro_number][local_earliest_index[Q[0].first]];
+		Macro m2 = word_bucket[macro_number][local_earliest_index[Q[head].first]];
+		int month_difference = (m2.year - m1.year) * 12 + (m2.month - m1.month);
+		max_path_2.push_back(make_pair(Q[head].second, month_difference));
 		int index = -1;
         for(int temp : graph[Q[head].first]) {
 			index ++;
@@ -257,7 +268,11 @@ int BFS(int x, int option, int macro_number) {
 			}
 		}
     }
-
+	if(option == 2 && rev_macro_to_num[macro_number].length() >= Macro_length_filter) {
+		for(auto p : max_path_2) {
+			fout_max_path2 << Q[head-1].second << " " << p.first << " " << p.second << endl;
+		}
+	}
     return Q[head - 1].second;
 }
 
@@ -273,11 +288,24 @@ bool MacroHasBigComponent(int x) {
 	return false;
 }
 
-bool solve(int x) {
+int break_index = - 1;
+int final_size = 0;
+bool solve(int x, int option) { // if option == 0 then all papers, if option == 1 go up to break_index;
+	if(option == 0) {
+		break_index = -1;
+		final_size = 0;
+	} else {
+		if(break_index == -1) {
+			return false;
+		}
+	}
 	int macro_number = x;
-	cerr << x << endl;
     if(word_bucket[x].size() < Macro_paper_usage || rev_macro_to_num[word_bucket[x][0].macro_number].length() < Macro_length_filter) { // macro needs to be used and should have a length
-        return false;
+//		if(word_bucket[x].size() >= Macro_paper_usage && rev_macro_to_num[x].length() > 10 && rand() % 5 == 0) {
+//		
+//		} else {
+			return false;
+//		}
     }
     cerr << x  << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl;
     cerr << "Number of papers: " << word_bucket[x].size() << endl;
@@ -303,15 +331,31 @@ bool solve(int x) {
 
     cerr << "BUILDING GRAPH " << endl;
     for(int i = 0; i < (int) word_bucket[x].size(); i++) {
+		if(i > break_index && option == 1){
+			break;
+		}
         for(int author : word_bucket[x][i].authors) {
             if(local_author_id.find(author) == local_author_id.end()){
                 rev_local_author_id[local_counter] = author;
                 local_author_id[author] = local_counter++;
                 local_earliest[local_counter - 1] = word_bucket[x][i].getTime();
                 local_earliest_index[local_counter - 1] = i;
+				if(local_counter >= 70 && option == 0 && break_index == -1){
+					break_index = i;
+				}
             }
         }
+
+		bool check_pass_on = false;
+		bool check_inherited[100], check_passed_on[100];
+		memset(check_inherited, 0, sizeof check_inherited);
+		memset(check_passed_on, 0, sizeof check_passed_on);
+
         int j = -1;
+		int is_interesting = 0;
+		if(interesting_macros2.find(macro_number) != interesting_macros2.end()) {
+			is_interesting = 1;	
+		}
         for(int author1 : word_bucket[x][i].authors) {
             j++;
             int k = -1;
@@ -325,17 +369,66 @@ bool solve(int x) {
                 int exp_first = word_bucket[x][i].experience[j];
                 int exp_second = word_bucket[x][i].experience[k];
                 if(local_earliest[first] <= local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
+					check_pass_on = true;
 					graph[first].push_back(second);
                     rev_graph[second].push_back(first);
 					graph_edge_index[first].push_back(i);
                 }
-                if(local_earliest[first] < local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime()) {
+                if(local_earliest[first] < local_earliest[second] && local_earliest[second] == word_bucket[x][i].getTime() && option == 0) {
                     fout_exp_difference << exp_first - exp_second << endl;
+					if(exp_first < 40 && check_passed_on[j] == false) { 
+						if(check_passed_on[j] == false) {
+							fout_pass_on_summary << author1 << " " <<  word_bucket[x][i].year * 12 + word_bucket[x][i].month << " ";
+							fout_pass_on_summary << exp_first << " " << 1 + is_interesting << " " << author_experience[author1] << endl; 
+							check_passed_on[j] = true;
+						}
+						if(check_inherited[k] == false) {
+							fout_inherited_summary << author2 << " " <<  word_bucket[x][i].year * 12 + word_bucket[x][i].month << " ";
+							fout_inherited_summary << exp_second << " " << 1 + is_interesting << " " << author_experience[author2] << endl; 
+							check_inherited[k] = true;
+						}
+					}
                 }
             }
         }
-    }
-#if 1
+		j = -1;
+		for(int author1 : word_bucket[x][i].authors) {	
+			j++;
+			int exp_first = word_bucket[x][i].experience[j];
+			int has_passed_on = 1;
+			int has_inherited = 1;
+			if(check_passed_on[j] == false) {
+				has_passed_on = 0;
+			}
+			if(check_inherited[j] == false) {
+				has_inherited = 0;
+			}
+			fout_pass_on_binary_summary << author1 << " " << exp_first << " " << word_bucket[x][i].year * 12 + word_bucket[x][i].month << " ";
+			fout_pass_on_binary_summary << has_passed_on << " " << author_experience[author1] << endl; 
+
+			fout_inherited_binary_summary << author1 << " " << exp_first << " " << word_bucket[x][i].year * 12 + word_bucket[x][i].month << " ";
+			fout_inherited_binary_summary << has_inherited << " " << author_experience[author1] << endl; 
+		}
+		if(check_pass_on == false) {
+			j = -1;
+			for(int author1 : word_bucket[x][i].authors) {
+				j++;
+				int exp_first = word_bucket[x][i].experience[j];
+				if(exp_first < 30 && check_passed_on[j] == false) { 
+					fout_pass_on_summary << author1 << " " <<  word_bucket[x][i].year * 12 + word_bucket[x][i].month << " ";
+					fout_pass_on_summary << exp_first << " " << 0 << " " << author_experience[author1] << endl; 
+					fout_inherited_summary << author1 << " " <<  word_bucket[x][i].year * 12 + word_bucket[x][i].month << " ";
+					fout_inherited_summary << exp_first << " " << 0 << " " << author_experience[author1] << endl; 
+				}
+			}
+		}
+
+	}
+	cerr << "option: break_index and local_counter" << option << ": " << break_index << " " << local_counter << endl;
+	if(option == 0) {
+		 final_size = local_counter;
+	}
+#if 0
     //    cerr << "STARTED SCC" << endl;
     // strongly connected component
     for(int i = 0 ; i < local_counter; i++) {
@@ -481,30 +574,54 @@ bool solve(int x) {
 			cout << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
 			exit(0);
 		}
-		for(int i = 0; i < 10; i++) {
-			fout_stats << paper_count[i] << " ";
+		if(option == 0){
+			for(int i = 0; i < 10; i++) {
+				fout_stats << paper_count[i] << " ";
+			}
+
+			fout_stats << word_bucket[x].size() << " ";
+			for(int i = 0; i < 10; i++) {
+				fout_stats << author_count[i] << " ";
+			}
+			for(int i = 0; i < 10; i++) {
+				fout_stats << max_people[i] << " ";
+			}
+			fout_stats << all_people.size() << " ";
+			fout_stats << local_biggest_interval << " ";
+			for(int i = 0; i < 10; i++) {
+				fout_stats << max_path[i] << " ";
+			}
+			for(int i = 0; i < (int)word_bucket[x][root_paper].categories.size(); i++) {
+				fout_stats << word_bucket[x][root_paper].categories[i];
+				if(i != (int)word_bucket[x][root_paper].categories.size() - 1) {
+					fout_stats << "/";
+				}
+			}
+			fout_stats << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
+		} else if(option ==1 && final_size > 100){
+			for(int i = 0; i < 10; i++) {
+				fout_stats2 << paper_count[i] << " ";
+			}
+
+			fout_stats2 << break_index << " ";
+			for(int i = 0; i < 10; i++) {
+				fout_stats2 << author_count[i] << " ";
+			}
+			for(int i = 0; i < 10; i++) {
+				fout_stats2 << max_people[i] << " ";
+			}
+			for(int i = 0; i < 10; i++) {
+				fout_stats2 << max_path[i] << " ";
+			}
+			if(final_size > 176) {
+				fout_stats2 << "1" << endl; 
+			} else {
+				fout_stats2 << "0" << endl; 
+			}
+		
 		}
 
-		fout_stats << word_bucket[x].size() << " ";
-		for(int i = 0; i < 10; i++) {
-			fout_stats << author_count[i] << " ";
-		}
-		for(int i = 0; i < 10; i++) {
-			fout_stats << max_people[i] << " ";
-		}
-		fout_stats << all_people.size() << " ";
-		fout_stats << local_biggest_interval << " ";
-		for(int i = 0; i < 10; i++) {
-			fout_stats << max_path[i] << " ";
-		}
-		for(int i = 0; i < (int)word_bucket[x][root_paper].categories.size(); i++) {
-			fout_stats << word_bucket[x][root_paper].categories[i];
-			if(i != (int)word_bucket[x][root_paper].categories.size() - 1) {
-				fout_stats << "/";
-			}
-		}
-		fout_stats << " " << rev_macro_to_num[word_bucket[x][0].macro_number] << endl; 
-		if(max_path[0] > 4) {
+		if(max_path[0] > 4 && option == 0) {
 			if(max_people[0] / (double) all_people.size() > 0.5) {
 				interesting_macros.push_back(x);
 				root_author[x] = rev_author_to_num[rev_local_author_id[comp[best_comp[0]][0]]];
@@ -522,7 +639,6 @@ bool solve(int x) {
 	//    feynman_fout << "Number of people in max and second max component: " << max_people  << " " << second_max_people << endl;
 	//    feynman_fout << "Intersection of the two biggest components and number of all people using the macro: " << intersection << " " << all_people.size() << " " << endl;
 
-	feynman_fout << max_people  << " " << all_people.size() << endl;
 	//    feynman_fout << max_people  << " " << second_max_people << endl;
 	//    feynman_fout << intersection << " " << all_people.size() << " " << endl;
 	// When the best paper was published, when the best burst started
@@ -532,18 +648,19 @@ bool solve(int x) {
 	//    }
 	//    feynman_fout << endl << "________________________________________" << endl;
 
-	//	if(word_bucket[x].size() > 100) { // TODO
-	fout_frac_length << rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << max_people[0] / (double)all_people.size() << endl;
-	//	}
-	fout_biggest_second_biggest << max_people[0] / (double) all_people.size()  << " " << max_people[1] / (double) all_people.size() << endl;
-	fout_heat_map <<  rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << all_people.size() << " " << max_people[0] / (double) all_people.size() << endl; 
-	if(MacroHasBigComponent(x) == true) {
-		for(int l = 0; l < (int)word_bucket[x].size(); l++) {
-			fout_good_samples << l << endl;
-			fout_good_samples << word_bucket[x][l].name << endl;
-			fout_good_samples << word_bucket[x][l].ToString() << endl;
+	if(option == 0) {
+		feynman_fout << max_people  << " " << all_people.size() << endl;
+		fout_frac_length << rev_macro_to_num[x].length() << " " << max_people[0] / (double) all_people.size() << endl;
+		fout_biggest_second_biggest << max_people[0] / (double) all_people.size()  << " " << max_people[1] / (double) all_people.size() << endl;
+		fout_heat_map <<  rev_macro_to_num[word_bucket[x][0].macro_number].length() << " " << all_people.size() << " " << max_people[0] / (double) all_people.size() << endl; 
+		if(MacroHasBigComponent(x) == true) {
+			for(int l = 0; l < (int)word_bucket[x].size(); l++) {
+				fout_good_samples << l << endl;
+				fout_good_samples << word_bucket[x][l].name << endl;
+				fout_good_samples << word_bucket[x][l].ToString() << endl;
+			}
+			fout_good_samples << "_____________________________________________________________" << endl;
 		}
-		fout_good_samples << "_____________________________________________________________" << endl;
 	}
 #endif
 	return true;
@@ -759,8 +876,16 @@ int main() {
         }
         getline(fin, s); // you have two empty lines
     }
-    cerr << "------> " << skipped << endl;
-    sort(macros.begin(), macros.end());
+
+	{ // read "interesting" macros - max_depth > 4
+		ifstream fin_interesting_macros("RawOutput/MacroTrees/LargeTreeMacros2.txt"); // 2 because we are writing on 1
+		while(getline(fin_interesting_macros, s)) {
+			interesting_macros2.insert(macro_to_num[s]);
+		}
+	}
+
+	cerr << "------> " << skipped << endl;
+	sort(macros.begin(), macros.end());
 	{
 		set<pair<int, string> > body_name;
 		int paper_count = 0;
@@ -769,6 +894,9 @@ int main() {
 			body_name.insert(make_pair(macros[i].macro_number, macros[i].name));
 			for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
 				int author = macros[i].authors[j];
+				if(author_experience.find(author) == author_experience.end()) {
+					author_experience[author] = 0;
+				}
 				macros[i].experience.push_back(author_experience[author]);
 			}
 			if(i == 0 || !ExactSame(macros[i], macros[i - 1])) {
@@ -777,13 +905,6 @@ int main() {
 				for(int j = 0 ; j < (int)macros[i].authors.size(); j++) {
 					int author = macros[i].authors[j];
 					author_experience[author]++;
-				}
-				for(int author1 : macros[i].authors) {
-					for(int author2 : macros[i].authors) {
-						if(author1 >= author2) {
-							continue;
-						}
-					}
 				}
 			}
 		}
@@ -799,24 +920,33 @@ int main() {
     macros.clear();
 	for(int i = 0; i < 10; i++) {
 		fout_stats << "#papersRoot" << to_string(i) << " ";
+		fout_stats2 << "#papersRoot" << to_string(i) << " ";
 	}
 	fout_stats << "#papersAll ";
+	fout_stats2 << "BreakPapersFor70Authors ";
 	for(int i = 0; i < 10; i++) {
 		fout_stats << "#authorsRoot" << to_string(i) << " ";
+		fout_stats2 << "#authorsRoot" << to_string(i) << " ";
 	}
 	for(int i = 0; i < 10; i++) {
 		fout_stats << "#authorsComponent" << to_string(i) << " ";
+		fout_stats2 << "#authorsComponent" << to_string(i) << " ";
 	}
 	fout_stats << "#authorsAll  ";
 	fout_stats << "BiggestAdaptingInterval ";
 	for(int i = 0; i < 10; i++) {
 		fout_stats << "#MaxPathRoot" << to_string(i) << " ";
+		fout_stats2 << "#MaxPathRoot" << to_string(i) << " ";
 	}
 	fout_stats << "Categories Macro" << endl;
-
+	fout_stats2 << "Label" << endl;
 	fout_tree_edges << "Source Destination DepthOfDestination MacroNumber IndexInWordBucket" << endl;
+	fout_max_path2 << "FinalDepth CurrentDepth MonthTookFromRoot" << endl; 
+	fout_pass_on_summary << "Author Date CurrentExperience DidPassOn FinalExperience" << endl;
     for(int i = 1; i < (int)macro_counter; i++) {
-        solve(i); 
+        if(solve(i, 0) == true) {
+//			solve(i, 1);
+		}
     }
     cerr << "num above cut: " <<  num_above_cut << endl;
     cerr << "macros with max_path larger than threshold: " << interesting_macros.size() << endl;

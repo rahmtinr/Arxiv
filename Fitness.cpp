@@ -170,7 +170,7 @@ void AuthorFitness() {
     map<pair<int, int>, string> author_macro_name; // value = the last name that author(key.first) used for macro(key.second)
     map<int, int> author_change_macro_name; // value = how many time author used a macro
     map<pair<int, int>, int> author_macro_pair_change_count; // value = how many times the author(key.first) changed the name for macro(key.second)
-
+	
     for(int i = 0; i < (int) macros.size(); i++) {
         if(i % 100000 == 0 ) {
             cerr <<"Longevity " <<  i / 100000 << endl;
